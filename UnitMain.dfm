@@ -6,6 +6,7 @@ object FormMain: TFormMain
   ClientHeight = 442
   ClientWidth = 305
   Color = clBtnFace
+  Constraints.MinHeight = 300
   Constraints.MinWidth = 300
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -57,6 +58,44 @@ object FormMain: TFormMain
     TabOrder = 1
     Text = ''
     ExplicitWidth = 265
+  end
+  object CheckListBoxOptions: TCheckListBox
+    Left = 16
+    Top = 128
+    Width = 269
+    Height = 257
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ItemHeight = 15
+    Items.Strings = (
+      'At Timer'
+      '5 minutes before a Timer'
+      '10 minutes before a Timer')
+    ParentFont = False
+    TabOrder = 2
+  end
+  object ButtonStart: TButton
+    Left = 136
+    Top = 400
+    Width = 75
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Caption = 'Start'
+    TabOrder = 3
+  end
+  object ButtonStop: TButton
+    Left = 210
+    Top = 400
+    Width = 75
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Caption = 'Stop'
+    Enabled = False
+    TabOrder = 4
   end
   object TrayIcon: TTrayIcon
     Visible = True

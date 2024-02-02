@@ -18,7 +18,8 @@ uses
   OverbyteIcsSslHttpRest,
   OverbyteIcsWebSocketCli,
   Vcl.StdCtrls,
-  Vcl.Mask;
+  Vcl.Mask,
+  Vcl.CheckLst;
 
 type
   TFormMain = class(TForm)
@@ -27,6 +28,9 @@ type
     LabeledEditSite: TLabeledEdit;
     LabeledEditCode: TLabeledEdit;
     LabelGetCode: TLabel;
+    CheckListBoxOptions: TCheckListBox;
+    ButtonStart: TButton;
+    ButtonStop: TButton;
   private
     { Private declarations }
   public
