@@ -2,3 +2,4 @@ tbh.dproj.local
 __history/
 *.dcu
 *.exe
+Win32/Debug/config.ini

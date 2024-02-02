@@ -13,6 +13,8 @@ object FormMain: TFormMain
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  OnClose = FormClose
+  OnCreate = FormCreate
   DesignSize = (
     305
     442)
@@ -32,6 +34,7 @@ object FormMain: TFormMain
     Font.Name = 'Segoe UI'
     Font.Style = [fsUnderline]
     ParentFont = False
+    OnClick = LabelGetCodeClick
     ExplicitLeft = 240
   end
   object LabeledEditSite: TLabeledEdit
