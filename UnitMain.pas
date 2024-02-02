@@ -3,6 +3,8 @@
 interface
 
 uses
+  MMSystem,
+  System.JSON,
   ShellApi,
   IniFiles,
   Winapi.Windows,
@@ -81,12 +83,15 @@ end;
 
 procedure TFormMain.TrayIconBalloonClick(Sender: TObject);
 begin
-  ShellExecute(0, 'open', PChar(lastUrl), nil, nil, SW_SHOWNORMAL);
+  if lastUrl <> '' then
+  begin
+    ShellExecute(0, 'open', PChar(lastUrl), nil, nil, SW_SHOWNORMAL);
+  end;
 end;
 
 procedure TFormMain.WebSocketWSConnected(Sender: TObject);
 begin
-  WebSocket.WSSendText(nil, 'code,' + LabeledEditCode.Text);
+  WebSocket.WSSendText(nil, 'code/' + LabeledEditCode.Text);
 end;
 
 procedure TFormMain.WebSocketWSDisconnected(Sender: TObject);
@@ -96,6 +101,9 @@ end;
 
 procedure TFormMain.WebSocketWSFrameRcvd(Sender: TSslWebSocketCli;
   const APacket: string; var AFrame: TWebSocketReceivedFrame);
+var
+  JSON: TJSONObject;
+  sound: String;
 begin
   if APacket = 'ping' then
   begin
@@ -106,23 +114,42 @@ begin
   begin
     if CheckListBoxOptions.Checked[0] then
     begin
-      WebSocket.WSSendText(nil, 'timer,0');
+      WebSocket.WSSendText(nil, 'timer/0');
     end;
     if CheckListBoxOptions.Checked[1] then
     begin
-      WebSocket.WSSendText(nil, 'timer,5');
+      WebSocket.WSSendText(nil, 'timer/5');
     end;
     if CheckListBoxOptions.Checked[2] then
     begin
-      WebSocket.WSSendText(nil, 'timer,10');
+      WebSocket.WSSendText(nil, 'timer/10');
     end;
+  end
+
+  else if Pos('{', APacket) = 1 then
+  begin
+    JSON := TJSONObject.ParseJSONValue(APacket, False, True) as TJSONObject;
+
+    TrayIcon.BalloonTitle := JSON.FindValue('title').Value;
+    TrayIcon.BalloonHint := JSON.FindValue('text').Value;
+    TrayIcon.ShowBalloonHint;
+
+    lastUrl := JSON.FindValue('url').Value;
+
+    sound := JSON.FindValue('sound').Value;
+    if sound <> '' then
+    begin
+      sndPlaySound(PChar(sound), SND_NODEFAULT Or SND_ASYNC);
+    end;
+
+    FreeAndNil(JSON);
   end
 
   else
   begin
     lastUrl := LabeledEditSite.Text + '/timer';
 
-    TrayIcon.BalloonTitle := 'Title';
+    TrayIcon.BalloonTitle := '';
     TrayIcon.BalloonHint := APacket;
     TrayIcon.ShowBalloonHint;
   end;
@@ -134,6 +161,9 @@ begin
 
   ButtonStart.Enabled := False;
   ButtonStop.Enabled := True;
+  CheckListBoxOptions.Enabled := False;
+  LabeledEditSite.Enabled := False;
+  LabeledEditCode.Enabled := False;
 
   WebSocket.URL := LabeledEditSite.Text + '/socket/';
   WebSocket.URL := StringReplace(WebSocket.URL, 'http', 'ws', [rfIgnoreCase]);
@@ -147,6 +177,9 @@ begin
 
   ButtonStart.Enabled := True;
   ButtonStop.Enabled := False;
+  CheckListBoxOptions.Enabled := True;
+  LabeledEditSite.Enabled := True;
+  LabeledEditCode.Enabled := True;
 
   WebSocket.Close;
 end;

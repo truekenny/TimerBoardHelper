@@ -48,6 +48,7 @@ object FormMain: TFormMain
     EditLabel.Caption = 'Site'
     TabOrder = 0
     Text = ''
+    ExplicitWidth = 265
   end
   object LabeledEditCode: TLabeledEdit
     Left = 16
@@ -80,6 +81,8 @@ object FormMain: TFormMain
       '10 minutes before a Timer')
     ParentFont = False
     TabOrder = 2
+    ExplicitWidth = 265
+    ExplicitHeight = 256
   end
   object ButtonStart: TButton
     Left = 136
@@ -90,6 +93,8 @@ object FormMain: TFormMain
     Caption = 'Start'
     TabOrder = 3
     OnClick = ButtonStartClick
+    ExplicitLeft = 132
+    ExplicitTop = 399
   end
   object ButtonStop: TButton
     Left = 210
@@ -101,6 +106,8 @@ object FormMain: TFormMain
     Enabled = False
     TabOrder = 4
     OnClick = ButtonStopClick
+    ExplicitLeft = 206
+    ExplicitTop = 399
   end
   object TrayIcon: TTrayIcon
     PopupMenu = PopupMenuTray
