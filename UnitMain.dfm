@@ -2,7 +2,7 @@ object FormMain: TFormMain
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
-  Caption = 'FormMain'
+  Caption = 'TimerBoardHelper'
   ClientHeight = 442
   ClientWidth = 305
   Color = clBtnFace
@@ -89,6 +89,7 @@ object FormMain: TFormMain
     Anchors = [akRight, akBottom]
     Caption = 'Start'
     TabOrder = 3
+    OnClick = ButtonStartClick
   end
   object ButtonStop: TButton
     Left = 210
@@ -99,9 +100,12 @@ object FormMain: TFormMain
     Caption = 'Stop'
     Enabled = False
     TabOrder = 4
+    OnClick = ButtonStopClick
   end
   object TrayIcon: TTrayIcon
+    PopupMenu = PopupMenuTray
     Visible = True
+    OnBalloonClick = TrayIconBalloonClick
     Left = 136
     Top = 8
   end
@@ -147,7 +151,22 @@ object FormMain: TFormMain
     ShowProgress = False
     HttpUploadStrat = HttpUploadNone
     WSPingSecs = 10
+    OnWSConnected = WebSocketWSConnected
+    OnWSDisconnected = WebSocketWSDisconnected
+    OnWSFrameRcvd = WebSocketWSFrameRcvd
     Left = 200
     Top = 8
+  end
+  object PopupMenuTray: TPopupMenu
+    Left = 56
+    Top = 8
+    object MenuRestore: TMenuItem
+      Caption = 'Restore'
+      OnClick = MenuRestoreClick
+    end
+    object MenuTimerBoardHelper: TMenuItem
+      Caption = 'TimerBoardHelper'
+      Enabled = False
+    end
   end
 end
