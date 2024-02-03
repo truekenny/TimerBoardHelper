@@ -39,6 +39,7 @@ type
     MenuRestore: TMenuItem;
     MenuTimerBoardHelper: TMenuItem;
     TimerReconnect: TTimer;
+    MenuExit: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure LabelGetCodeClick(Sender: TObject);
@@ -51,6 +52,7 @@ type
     procedure MenuRestoreClick(Sender: TObject);
     procedure TrayIconBalloonClick(Sender: TObject);
     procedure TimerReconnectTimer(Sender: TObject);
+    procedure MenuExitClick(Sender: TObject);
   private
     { Private declarations }
     lastUrl: String;
@@ -114,6 +116,13 @@ begin
     nil, nil, SW_SHOWNORMAL);
 end;
 
+procedure TFormMain.MenuExitClick(Sender: TObject);
+begin
+  log('MenuExitClick');
+
+  Close();
+end;
+
 procedure TFormMain.MenuRestoreClick(Sender: TObject);
 begin
   ShowWindow(Handle, SW_NORMAL);
@@ -121,6 +130,8 @@ end;
 
 procedure TFormMain.TimerReconnectTimer(Sender: TObject);
 begin
+  log('TimerReconnectTimer: autoReconnect: ' + BoolToStr(autoReconnect));
+
   TimerReconnect.Enabled := False;
 
   WebSocket.Abort;
@@ -165,7 +176,7 @@ var
   JSON: TJSONObject;
   sound: String;
 begin
-  log('WebSocketWSDisconnected: ReasonPhrase: "' + WebSocket.ReasonPhrase +
+  log('WebSocketWSFrameRcvd: ReasonPhrase: "' + WebSocket.ReasonPhrase +
     '" APacket: "' + APacket + '"');
 
   if APacket = 'ping' then

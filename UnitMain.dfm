@@ -48,6 +48,7 @@ object FormMain: TFormMain
     EditLabel.Caption = 'Site'
     TabOrder = 0
     Text = ''
+    ExplicitWidth = 261
   end
   object LabeledEditCode: TLabeledEdit
     Left = 16
@@ -60,6 +61,7 @@ object FormMain: TFormMain
     EditLabel.Caption = 'Code'
     TabOrder = 1
     Text = ''
+    ExplicitWidth = 261
   end
   object CheckListBoxOptions: TCheckListBox
     Left = 16
@@ -72,13 +74,15 @@ object FormMain: TFormMain
     Font.Height = -12
     Font.Name = 'Segoe UI'
     Font.Style = []
-    ItemHeight = 17
+    ItemHeight = 15
     Items.Strings = (
       'At Timer'
       '5 minutes before a Timer'
       '10 minutes before a Timer')
     ParentFont = False
     TabOrder = 2
+    ExplicitWidth = 261
+    ExplicitHeight = 255
   end
   object ButtonStart: TButton
     Left = 132
@@ -89,6 +93,8 @@ object FormMain: TFormMain
     Caption = 'Start'
     TabOrder = 3
     OnClick = ButtonStartClick
+    ExplicitLeft = 128
+    ExplicitTop = 398
   end
   object ButtonStop: TButton
     Left = 206
@@ -100,6 +106,8 @@ object FormMain: TFormMain
     Enabled = False
     TabOrder = 4
     OnClick = ButtonStopClick
+    ExplicitLeft = 202
+    ExplicitTop = 398
   end
   object TrayIcon: TTrayIcon
     PopupMenu = PopupMenuTray
@@ -159,6 +167,10 @@ object FormMain: TFormMain
   object PopupMenuTray: TPopupMenu
     Left = 56
     Top = 8
+    object MenuExit: TMenuItem
+      Caption = 'Exit'
+      OnClick = MenuExitClick
+    end
     object MenuRestore: TMenuItem
       Caption = 'Restore'
       OnClick = MenuRestoreClick
