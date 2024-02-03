@@ -213,7 +213,7 @@ begin
     TrayIcon.BalloonHint := JSON.FindValue('text').Value;
     TrayIcon.ShowBalloonHint;
 
-    lastUrl := JSON.FindValue('url').Value;
+    lastUrl := LabeledEditSite.Text + JSON.FindValue('url').Value;
 
     sound := JSON.FindValue('sound').Value;
     if sound <> '' then
