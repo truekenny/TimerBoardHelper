@@ -3,3 +3,4 @@ __history/
 *.dcu
 *.exe
 Win32/Debug/config.ini
+tbh.identcache

@@ -110,6 +110,11 @@ begin
     WebSocket.WSSendText(nil, 'pong')
   end
 
+  else if APacket = 'ok' then
+  begin
+
+  end
+
   else if APacket = 'options' then
   begin
     if CheckListBoxOptions.Checked[0] then
