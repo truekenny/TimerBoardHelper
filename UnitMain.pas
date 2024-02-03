@@ -38,6 +38,7 @@ type
     PopupMenuTray: TPopupMenu;
     MenuRestore: TMenuItem;
     MenuTimerBoardHelper: TMenuItem;
+    TimerReconnect: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure LabelGetCodeClick(Sender: TObject);
@@ -49,6 +50,7 @@ type
     procedure WebSocketWSConnected(Sender: TObject);
     procedure MenuRestoreClick(Sender: TObject);
     procedure TrayIconBalloonClick(Sender: TObject);
+    procedure TimerReconnectTimer(Sender: TObject);
   private
     { Private declarations }
     lastUrl: String;
@@ -82,6 +84,14 @@ begin
   ShowWindow(Handle, SW_NORMAL);
 end;
 
+procedure TFormMain.TimerReconnectTimer(Sender: TObject);
+begin
+  TimerReconnect.Enabled := False;
+
+  WebSocket.Abort;
+  WebSocket.WSConnect;
+end;
+
 procedure TFormMain.TrayIconBalloonClick(Sender: TObject);
 begin
   if lastUrl <> '' then
@@ -102,8 +112,7 @@ begin
   if autoReconnect then
   begin
     autoReconnect := False;
-    WebSocket.Abort;
-    WebSocket.WSConnect;
+    TimerReconnect.Enabled := True;
   end
   else
   begin
@@ -193,6 +202,7 @@ end;
 procedure TFormMain.ButtonStopClick(Sender: TObject);
 begin
   autoReconnect := False;
+  TimerReconnect.Enabled := False;
 
   ShowWindow(Handle, SW_NORMAL);
 

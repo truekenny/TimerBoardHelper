@@ -176,4 +176,11 @@ object FormMain: TFormMain
       Enabled = False
     end
   end
+  object TimerReconnect: TTimer
+    Enabled = False
+    Interval = 5000
+    OnTimer = TimerReconnectTimer
+    Left = 56
+    Top = 96
+  end
 end
