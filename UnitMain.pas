@@ -52,6 +52,7 @@ type
   private
     { Private declarations }
     lastUrl: String;
+    autoReconnect: Boolean;
 
     function GetFile(): TIniFile;
   public
@@ -91,12 +92,24 @@ end;
 
 procedure TFormMain.WebSocketWSConnected(Sender: TObject);
 begin
+  autoReconnect := True;
+
   WebSocket.WSSendText(nil, 'code/' + LabeledEditCode.Text);
 end;
 
 procedure TFormMain.WebSocketWSDisconnected(Sender: TObject);
 begin
-  ButtonStopClick(Sender);
+  if autoReconnect then
+  begin
+    autoReconnect := False;
+    WebSocket.Abort;
+    WebSocket.WSConnect;
+  end
+  else
+  begin
+    Showmessage(WebSocket.ReasonPhrase);
+    ButtonStopClick(Sender);
+  end;
 end;
 
 procedure TFormMain.WebSocketWSFrameRcvd(Sender: TSslWebSocketCli;
@@ -173,11 +186,14 @@ begin
   WebSocket.URL := LabeledEditSite.Text + '/socket/';
   WebSocket.URL := StringReplace(WebSocket.URL, 'http', 'ws', [rfIgnoreCase]);
 
+  // WebSocket.Abort;
   WebSocket.WSConnect;
 end;
 
 procedure TFormMain.ButtonStopClick(Sender: TObject);
 begin
+  autoReconnect := False;
+
   ShowWindow(Handle, SW_NORMAL);
 
   ButtonStart.Enabled := True;
@@ -186,7 +202,7 @@ begin
   LabeledEditSite.Enabled := True;
   LabeledEditCode.Enabled := True;
 
-  WebSocket.Close;
+  WebSocket.Abort;
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -213,7 +229,8 @@ begin
     ini.Free;
   end;
 
-  WebSocket.Close;
+  autoReconnect := False;
+  WebSocket.Abort;
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
@@ -224,6 +241,10 @@ var
   ini: TIniFile;
   index: Integer;
 begin
+  WebSocket.Timeout := 30;
+  WebSocket.WSPingSecs := 30;
+  autoReconnect := False;
+
   ini := GetFile();
   try
     Left := ini.ReadInteger('main', 'left',
