@@ -3,8 +3,8 @@ object FormMain: TFormMain
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'TimerBoardHelper'
-  ClientHeight = 442
-  ClientWidth = 305
+  ClientHeight = 441
+  ClientWidth = 301
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 300
@@ -16,11 +16,11 @@ object FormMain: TFormMain
   OnClose = FormClose
   OnCreate = FormCreate
   DesignSize = (
-    305
-    442)
+    301
+    441)
   TextHeight = 15
   object LabelGetCode: TLabel
-    Left = 236
+    Left = 232
     Top = 101
     Width = 49
     Height = 15
@@ -40,7 +40,7 @@ object FormMain: TFormMain
   object LabeledEditSite: TLabeledEdit
     Left = 16
     Top = 24
-    Width = 269
+    Width = 265
     Height = 23
     Anchors = [akLeft, akTop, akRight]
     EditLabel.Width = 19
@@ -48,12 +48,11 @@ object FormMain: TFormMain
     EditLabel.Caption = 'Site'
     TabOrder = 0
     Text = ''
-    ExplicitWidth = 265
   end
   object LabeledEditCode: TLabeledEdit
     Left = 16
     Top = 72
-    Width = 269
+    Width = 265
     Height = 23
     Anchors = [akLeft, akTop, akRight]
     EditLabel.Width = 28
@@ -61,44 +60,39 @@ object FormMain: TFormMain
     EditLabel.Caption = 'Code'
     TabOrder = 1
     Text = ''
-    ExplicitWidth = 265
   end
   object CheckListBoxOptions: TCheckListBox
     Left = 16
     Top = 128
-    Width = 269
-    Height = 257
+    Width = 265
+    Height = 256
     Anchors = [akLeft, akTop, akRight, akBottom]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
     Font.Name = 'Segoe UI'
     Font.Style = []
-    ItemHeight = 15
+    ItemHeight = 17
     Items.Strings = (
       'At Timer'
       '5 minutes before a Timer'
       '10 minutes before a Timer')
     ParentFont = False
     TabOrder = 2
-    ExplicitWidth = 265
-    ExplicitHeight = 256
   end
   object ButtonStart: TButton
-    Left = 136
-    Top = 400
+    Left = 132
+    Top = 399
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Start'
     TabOrder = 3
     OnClick = ButtonStartClick
-    ExplicitLeft = 132
-    ExplicitTop = 399
   end
   object ButtonStop: TButton
-    Left = 210
-    Top = 400
+    Left = 206
+    Top = 399
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -106,8 +100,6 @@ object FormMain: TFormMain
     Enabled = False
     TabOrder = 4
     OnClick = ButtonStopClick
-    ExplicitLeft = 206
-    ExplicitTop = 399
   end
   object TrayIcon: TTrayIcon
     PopupMenu = PopupMenuTray

@@ -4,3 +4,4 @@ __history/
 *.exe
 Win32/Debug/config.ini
 tbh.identcache
+Win32/Debug/log.txt

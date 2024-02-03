@@ -57,6 +57,8 @@ type
     autoReconnect: Boolean;
 
     function GetFile(): TIniFile;
+    procedure log(s: String; firstMessage: Boolean = False);
+    procedure Send(s: String);
   public
     { Public declarations }
   end;
@@ -67,6 +69,39 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TFormMain.Send(s: String);
+begin
+  log('send: ' + s);
+  WebSocket.WSSendText(nil, s);
+end;
+
+procedure TFormMain.log(s: String; firstMessage: Boolean = False);
+var
+  fileName: String;
+  logFile: TextFile;
+begin
+  fileName := ExtractFilePath(ParamStr(0)) + '\log.txt';
+
+  AssignFile(logFile, fileName);
+
+  if FileExists(fileName) then
+  begin
+    Append(logFile);
+
+    if firstMessage then
+    begin
+      Writeln(logFile, #13);
+    end;
+  end
+  else
+  begin
+    Rewrite(logFile);
+  end;
+
+  Writeln(logFile, DateTimeToStr(Now) + ' ' + s);
+  CloseFile(logFile);
+end;
 
 function TFormMain.GetFile(): TIniFile;
 begin
@@ -102,13 +137,17 @@ end;
 
 procedure TFormMain.WebSocketWSConnected(Sender: TObject);
 begin
+  log('WebSocketWSConnected: ' + WebSocket.ReasonPhrase);
+
   autoReconnect := True;
 
-  WebSocket.WSSendText(nil, 'code/' + LabeledEditCode.Text);
+  Send('code/' + LabeledEditCode.Text);
 end;
 
 procedure TFormMain.WebSocketWSDisconnected(Sender: TObject);
 begin
+  log('WebSocketWSDisconnected: ' + WebSocket.ReasonPhrase);
+
   if autoReconnect then
   begin
     autoReconnect := False;
@@ -116,7 +155,6 @@ begin
   end
   else
   begin
-    Showmessage(WebSocket.ReasonPhrase);
     ButtonStopClick(Sender);
   end;
 end;
@@ -127,9 +165,12 @@ var
   JSON: TJSONObject;
   sound: String;
 begin
+  log('WebSocketWSDisconnected: ReasonPhrase: "' + WebSocket.ReasonPhrase +
+    '" APacket: "' + APacket + '"');
+
   if APacket = 'ping' then
   begin
-    WebSocket.WSSendText(nil, 'pong')
+    Send('pong')
   end
 
   else if APacket = 'ok' then
@@ -141,15 +182,15 @@ begin
   begin
     if CheckListBoxOptions.Checked[0] then
     begin
-      WebSocket.WSSendText(nil, 'timer/0');
+      Send('timer/0');
     end;
     if CheckListBoxOptions.Checked[1] then
     begin
-      WebSocket.WSSendText(nil, 'timer/5');
+      Send('timer/5');
     end;
     if CheckListBoxOptions.Checked[2] then
     begin
-      WebSocket.WSSendText(nil, 'timer/10');
+      Send('timer/10');
     end;
   end
 
@@ -241,6 +282,8 @@ begin
 
   autoReconnect := False;
   WebSocket.Abort;
+
+  log('FormClose');
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
@@ -251,6 +294,8 @@ var
   ini: TIniFile;
   index: Integer;
 begin
+  log('FormCreate', True);
+
   WebSocket.Timeout := 30;
   WebSocket.WSPingSecs := 30;
   autoReconnect := False;
