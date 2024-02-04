@@ -133,7 +133,8 @@ end;
 
 procedure TFormMain.TimerReconnectForSleepTimer(Sender: TObject);
 begin
-  log('TimerReconnectForSleepTimer: autoReconnect: ' + BoolToStr(autoReconnect));
+  log('TimerReconnectForSleepTimer: autoReconnect: ' +
+    BoolToStr(autoReconnect));
 
   TimerReconnectForSleep.Enabled := False;
   TimerReconnect.Enabled := True;
@@ -171,15 +172,19 @@ begin
   log('WebSocketWSDisconnected: ' + WebSocket.ReasonPhrase + ' autoReconnect: '
     + BoolToStr(autoReconnect));
 
+  TrayIcon.BalloonTitle := 'Disconnected';
   if autoReconnect then
   begin
+    TrayIcon.BalloonHint := '(Auto reconnecting...)';
     autoReconnect := False;
     TimerReconnectForSleep.Enabled := True;
   end
   else
   begin
+    TrayIcon.BalloonHint := '(Shutdown)';
     ButtonStopClick(Sender);
   end;
+  TrayIcon.ShowBalloonHint;
 end;
 
 procedure TFormMain.WebSocketWSFrameRcvd(Sender: TSslWebSocketCli;
@@ -191,16 +196,19 @@ begin
   log('WebSocketWSFrameRcvd: ReasonPhrase: "' + WebSocket.ReasonPhrase +
     '" APacket: "' + APacket + '"');
 
+  // ping
   if APacket = 'ping' then
   begin
     Send('pong')
   end
 
+  // ok
   else if APacket = 'ok' then
   begin
 
   end
 
+  // options
   else if APacket = 'options' then
   begin
     if CheckListBoxOptions.Checked[0] then
@@ -217,6 +225,7 @@ begin
     end;
   end
 
+  // json
   else if Pos('{', APacket) = 1 then
   begin
     JSON := TJSONObject.ParseJSONValue(APacket, False, True) as TJSONObject;
@@ -236,12 +245,13 @@ begin
     FreeAndNil(JSON);
   end
 
-  else
+  // else
+  else if APacket <> '' then
   begin
     lastUrl := LabeledEditSite.Text + '/timer';
 
-    TrayIcon.BalloonTitle := '';
-    TrayIcon.BalloonHint := APacket;
+    TrayIcon.BalloonTitle := APacket;
+    TrayIcon.BalloonHint := '(Message received)';
     TrayIcon.ShowBalloonHint;
   end;
 end;
@@ -353,7 +363,7 @@ procedure TFormMain.FormResize(Sender: TObject);
 begin
   if WindowState = TWindowState.wsMinimized then
   begin
-      ShowWindow(Handle, SW_HIDE);
+    ShowWindow(Handle, SW_HIDE);
   end;
 end;
 
