@@ -183,16 +183,16 @@ object FormMain: TFormMain
   end
   object TimerReconnect: TTimer
     Enabled = False
-    Interval = 5000
+    Interval = 10000
     OnTimer = TimerReconnectTimer
-    Left = 56
+    Left = 176
     Top = 96
   end
   object TimerReconnectForSleep: TTimer
     Enabled = False
     Interval = 5000
     OnTimer = TimerReconnectForSleepTimer
-    Left = 168
+    Left = 56
     Top = 96
   end
 end
