@@ -348,6 +348,8 @@ begin
   autoReconnect := False;
   WebSocket.Abort;
 
+  NotificationCenter.CancelAll;
+
   log('FormClose');
 end;
 
