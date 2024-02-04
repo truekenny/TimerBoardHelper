@@ -3,6 +3,7 @@
 interface
 
 uses
+  DateUtils,
   MMSystem,
   System.JSON,
   ShellApi,
@@ -23,7 +24,9 @@ uses
   OverbyteIcsWebSocketCli,
   Vcl.StdCtrls,
   Vcl.Mask,
-  Vcl.CheckLst, Vcl.Menus;
+  Vcl.CheckLst,
+  Vcl.Menus,
+  System.Notification;
 
 type
   TFormMain = class(TForm)
@@ -41,6 +44,7 @@ type
     TimerReconnect: TTimer;
     MenuExit: TMenuItem;
     TimerReconnectForSleep: TTimer;
+    NotificationCenter: TNotificationCenter;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure LabelGetCodeClick(Sender: TObject);
@@ -51,11 +55,12 @@ type
     procedure WebSocketWSDisconnected(Sender: TObject);
     procedure WebSocketWSConnected(Sender: TObject);
     procedure MenuRestoreClick(Sender: TObject);
-    procedure TrayIconBalloonClick(Sender: TObject);
     procedure TimerReconnectTimer(Sender: TObject);
     procedure MenuExitClick(Sender: TObject);
     procedure TimerReconnectForSleepTimer(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure NotificationCenterReceiveLocalNotification(Sender: TObject;
+      ANotification: TNotification);
   private
     { Private declarations }
     lastUrl: String;
@@ -64,6 +69,7 @@ type
     function GetFile(): TIniFile;
     procedure log(s: String; firstMessage: Boolean = False);
     procedure Send(s: String);
+    procedure ShowNotification(Id, Title, Text: String);
   public
     { Public declarations }
   end;
@@ -74,6 +80,28 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TFormMain.ShowNotification(Id, Title, Text: String);
+var
+  MyNotification: TNotification;
+begin
+  if not NotificationCenter.Supported then
+  begin
+    Exit;
+  end;
+
+  MyNotification := NotificationCenter.CreateNotification;
+  try
+    MyNotification.Name := Id;
+    MyNotification.Title := Title;
+    MyNotification.AlertBody := Text;
+    MyNotification.FireDate := IncSecond(Now, 60);
+
+    NotificationCenter.PresentNotification(MyNotification);
+  finally
+    MyNotification.Free;
+  end;
+end;
 
 procedure TFormMain.Send(s: String);
 begin
@@ -131,6 +159,18 @@ begin
   ShowWindow(Handle, SW_NORMAL);
 end;
 
+procedure TFormMain.NotificationCenterReceiveLocalNotification(Sender: TObject;
+  ANotification: TNotification);
+begin
+  log('NotificationCenterReceiveLocalNotification: ' + ANotification.Name +
+    ', url: ' + lastUrl);
+
+  if lastUrl <> '' then
+  begin
+    ShellExecute(0, 'open', PChar(lastUrl), nil, nil, SW_SHOWNORMAL);
+  end;
+end;
+
 procedure TFormMain.TimerReconnectForSleepTimer(Sender: TObject);
 begin
   log('TimerReconnectForSleepTimer: autoReconnect: ' +
@@ -150,14 +190,6 @@ begin
   WebSocket.WSConnect;
 end;
 
-procedure TFormMain.TrayIconBalloonClick(Sender: TObject);
-begin
-  if lastUrl <> '' then
-  begin
-    ShellExecute(0, 'open', PChar(lastUrl), nil, nil, SW_SHOWNORMAL);
-  end;
-end;
-
 procedure TFormMain.WebSocketWSConnected(Sender: TObject);
 begin
   log('WebSocketWSConnected: ' + WebSocket.ReasonPhrase);
@@ -168,23 +200,25 @@ begin
 end;
 
 procedure TFormMain.WebSocketWSDisconnected(Sender: TObject);
+var
+  Text: String;
 begin
   log('WebSocketWSDisconnected: ' + WebSocket.ReasonPhrase + ' autoReconnect: '
     + BoolToStr(autoReconnect));
 
-  TrayIcon.BalloonTitle := 'Disconnected';
   if autoReconnect then
   begin
-    TrayIcon.BalloonHint := '(Auto reconnecting...)';
+    Text := '(Auto reconnecting...)';
     autoReconnect := False;
     TimerReconnectForSleep.Enabled := True;
   end
   else
   begin
-    TrayIcon.BalloonHint := '(Shutdown)';
+    Text := '(Shutdown)';
     ButtonStopClick(Sender);
   end;
-  TrayIcon.ShowBalloonHint;
+
+  ShowNotification('WebSocketWSDisconnected', 'Disconnected', Text);
 end;
 
 procedure TFormMain.WebSocketWSFrameRcvd(Sender: TSslWebSocketCli;
@@ -230,9 +264,8 @@ begin
   begin
     JSON := TJSONObject.ParseJSONValue(APacket, False, True) as TJSONObject;
 
-    TrayIcon.BalloonTitle := JSON.FindValue('title').Value;
-    TrayIcon.BalloonHint := JSON.FindValue('text').Value;
-    TrayIcon.ShowBalloonHint;
+    ShowNotification('json', JSON.FindValue('title').Value,
+      JSON.FindValue('text').Value);
 
     lastUrl := LabeledEditSite.Text + JSON.FindValue('url').Value;
 
@@ -250,9 +283,7 @@ begin
   begin
     lastUrl := LabeledEditSite.Text + '/timer';
 
-    TrayIcon.BalloonTitle := APacket;
-    TrayIcon.BalloonHint := '(Message received)';
-    TrayIcon.ShowBalloonHint;
+    ShowNotification('message', APacket, '(Message received)');
   end;
 end;
 
@@ -307,7 +338,7 @@ begin
 
     for index := 0 to CheckListBoxOptions.Count - 1 do
     begin
-      ini.WriteBool('notification', 'checked.' + IntToStr(index),
+      ini.WriteBool('notification', 'checked.' + inttostr(index),
         CheckListBoxOptions.Checked[index]);
     end;
   finally
@@ -351,7 +382,7 @@ begin
     for index := 0 to CheckListBoxOptions.Count - 1 do
     begin
       CheckListBoxOptions.Checked[index] := ini.ReadBool('notification',
-        'checked.' + IntToStr(index), True);
+        'checked.' + inttostr(index), True);
     end;
 
   finally

@@ -113,7 +113,6 @@ object FormMain: TFormMain
   object TrayIcon: TTrayIcon
     PopupMenu = PopupMenuTray
     Visible = True
-    OnBalloonClick = TrayIconBalloonClick
     Left = 136
     Top = 8
   end
@@ -194,5 +193,10 @@ object FormMain: TFormMain
     OnTimer = TimerReconnectForSleepTimer
     Left = 56
     Top = 96
+  end
+  object NotificationCenter: TNotificationCenter
+    OnReceiveLocalNotification = NotificationCenterReceiveLocalNotification
+    Left = 56
+    Top = 200
   end
 end
