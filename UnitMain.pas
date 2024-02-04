@@ -40,6 +40,7 @@ type
     MenuTimerBoardHelper: TMenuItem;
     TimerReconnect: TTimer;
     MenuExit: TMenuItem;
+    TimerReconnectForSleep: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure LabelGetCodeClick(Sender: TObject);
@@ -53,6 +54,8 @@ type
     procedure TrayIconBalloonClick(Sender: TObject);
     procedure TimerReconnectTimer(Sender: TObject);
     procedure MenuExitClick(Sender: TObject);
+    procedure TimerReconnectForSleepTimer(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
     { Private declarations }
     lastUrl: String;
@@ -128,6 +131,14 @@ begin
   ShowWindow(Handle, SW_NORMAL);
 end;
 
+procedure TFormMain.TimerReconnectForSleepTimer(Sender: TObject);
+begin
+  log('TimerReconnectForSleepTimer: autoReconnect: ' + BoolToStr(autoReconnect));
+
+  TimerReconnectForSleep.Enabled := False;
+  TimerReconnect.Enabled := True;
+end;
+
 procedure TFormMain.TimerReconnectTimer(Sender: TObject);
 begin
   log('TimerReconnectTimer: autoReconnect: ' + BoolToStr(autoReconnect));
@@ -157,12 +168,13 @@ end;
 
 procedure TFormMain.WebSocketWSDisconnected(Sender: TObject);
 begin
-  log('WebSocketWSDisconnected: ' + WebSocket.ReasonPhrase);
+  log('WebSocketWSDisconnected: ' + WebSocket.ReasonPhrase + ' autoReconnect: '
+    + BoolToStr(autoReconnect));
 
   if autoReconnect then
   begin
     autoReconnect := False;
-    TimerReconnect.Enabled := True;
+    TimerReconnectForSleep.Enabled := True;
   end
   else
   begin
@@ -255,6 +267,7 @@ procedure TFormMain.ButtonStopClick(Sender: TObject);
 begin
   autoReconnect := False;
   TimerReconnect.Enabled := False;
+  TimerReconnectForSleep.Enabled := False;
 
   ShowWindow(Handle, SW_NORMAL);
 
@@ -333,6 +346,14 @@ begin
 
   finally
     ini.Free;
+  end;
+end;
+
+procedure TFormMain.FormResize(Sender: TObject);
+begin
+  if WindowState = TWindowState.wsMinimized then
+  begin
+      ShowWindow(Handle, SW_HIDE);
   end;
 end;
 

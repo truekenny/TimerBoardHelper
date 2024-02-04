@@ -15,6 +15,7 @@ object FormMain: TFormMain
   Font.Style = []
   OnClose = FormClose
   OnCreate = FormCreate
+  OnResize = FormResize
   DesignSize = (
     301
     441)
@@ -185,6 +186,12 @@ object FormMain: TFormMain
     Interval = 5000
     OnTimer = TimerReconnectTimer
     Left = 56
+    Top = 96
+  end
+  object TimerReconnectForSleep: TTimer
+    Enabled = False
+    OnTimer = TimerReconnectForSleepTimer
+    Left = 168
     Top = 96
   end
 end
