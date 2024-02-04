@@ -1,4 +1,4 @@
-﻿program tbh;
+﻿program TimerBoardHelper;
 
 uses
   Vcl.Forms,
