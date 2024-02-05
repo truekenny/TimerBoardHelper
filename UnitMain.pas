@@ -174,7 +174,7 @@ end;
 procedure TFormMain.TimerReconnectForSleepTimer(Sender: TObject);
 begin
   log('TimerReconnectForSleepTimer: autoReconnect: ' +
-    BoolToStr(autoReconnect));
+    BoolToStr(autoReconnect, True), True);
 
   TimerReconnectForSleep.Enabled := False;
   TimerReconnect.Enabled := True;
@@ -182,7 +182,7 @@ end;
 
 procedure TFormMain.TimerReconnectTimer(Sender: TObject);
 begin
-  log('TimerReconnectTimer: autoReconnect: ' + BoolToStr(autoReconnect));
+  log('TimerReconnectTimer: autoReconnect: ' + BoolToStr(autoReconnect, True));
 
   TimerReconnect.Enabled := False;
 
@@ -193,10 +193,6 @@ end;
 procedure TFormMain.WebSocketWSConnected(Sender: TObject);
 begin
   log('WebSocketWSConnected: ' + WebSocket.ReasonPhrase);
-
-  autoReconnect := True;
-
-  Send('code/' + LabeledEditCode.Text);
 end;
 
 procedure TFormMain.WebSocketWSDisconnected(Sender: TObject);
@@ -204,7 +200,7 @@ var
   Text: String;
 begin
   log('WebSocketWSDisconnected: ' + WebSocket.ReasonPhrase + ' autoReconnect: '
-    + BoolToStr(autoReconnect));
+    + BoolToStr(autoReconnect, True));
 
   if autoReconnect then
   begin
@@ -234,6 +230,18 @@ begin
   if APacket = 'ping' then
   begin
     Send('pong')
+  end
+
+  // welcome
+  else if APacket = 'welcome' then
+  begin
+    autoReconnect := True;
+
+    Send('code/' + LabeledEditCode.Text);
+
+    lastUrl := LabeledEditSite.Text + '/timer';
+
+    ShowNotification('message', APacket, '(Message received)');
   end
 
   // ok
