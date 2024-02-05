@@ -70,6 +70,9 @@ type
     procedure log(s: String; firstMessage: Boolean = False);
     procedure Send(s: String);
     procedure ShowNotification(Id, Title, Text: String);
+    procedure AlignItems();
+    procedure AlignWidth(Item: TControl);
+    procedure AlignRight(Item: TControl; addSpace: Integer = 0);
   public
     { Public declarations }
   end;
@@ -80,6 +83,27 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TFormMain.AlignWidth(Item: TControl);
+begin
+  Item.Width := ClientWidth - 2 * Item.Left;
+end;
+
+procedure TFormMain.AlignRight(Item: TControl; addSpace: Integer = 0);
+begin
+  Item.Left := ClientWidth - Item.Width - LabeledEditSite.Left - addSpace;
+end;
+
+procedure TFormMain.AlignItems();
+begin
+  AlignWidth(LabeledEditSite);
+  AlignWidth(LabeledEditCode);
+  AlignWidth(CheckListBoxOptions);
+
+  AlignRight(ButtonStop);
+  AlignRight(LabelGetCode);
+  AlignRight(ButtonStart, ButtonStop.Width);
+end;
 
 procedure TFormMain.ShowNotification(Id, Title, Text: String);
 var
@@ -173,8 +197,8 @@ end;
 
 procedure TFormMain.TimerReconnectForSleepTimer(Sender: TObject);
 begin
-  log('TimerReconnectForSleepTimer: autoReconnect: ' +
-    BoolToStr(autoReconnect, True), True);
+  log('TimerReconnectForSleepTimer: autoReconnect: ' + BoolToStr(autoReconnect,
+    True), True);
 
   TimerReconnectForSleep.Enabled := False;
   TimerReconnect.Enabled := True;
@@ -370,6 +394,8 @@ var
   index: Integer;
 begin
   log('FormCreate', True);
+
+  AlignItems();
 
   WebSocket.Timeout := 30;
   WebSocket.WSPingSecs := 30;

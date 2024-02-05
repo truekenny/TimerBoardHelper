@@ -4,7 +4,7 @@ object FormMain: TFormMain
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'TimerBoardHelper'
   ClientHeight = 441
-  ClientWidth = 301
+  ClientWidth = 327
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 300
@@ -17,11 +17,11 @@ object FormMain: TFormMain
   OnCreate = FormCreate
   OnResize = FormResize
   DesignSize = (
-    301
+    327
     441)
   TextHeight = 15
   object LabelGetCode: TLabel
-    Left = 232
+    Left = 254
     Top = 101
     Width = 49
     Height = 15
@@ -41,7 +41,7 @@ object FormMain: TFormMain
   object LabeledEditSite: TLabeledEdit
     Left = 16
     Top = 24
-    Width = 265
+    Width = 287
     Height = 23
     Anchors = [akLeft, akTop, akRight]
     EditLabel.Width = 19
@@ -49,12 +49,12 @@ object FormMain: TFormMain
     EditLabel.Caption = 'Site'
     TabOrder = 0
     Text = ''
-    ExplicitWidth = 261
+    ExplicitWidth = 257
   end
   object LabeledEditCode: TLabeledEdit
     Left = 16
     Top = 72
-    Width = 265
+    Width = 287
     Height = 23
     Anchors = [akLeft, akTop, akRight]
     EditLabel.Width = 28
@@ -62,12 +62,12 @@ object FormMain: TFormMain
     EditLabel.Caption = 'Code'
     TabOrder = 1
     Text = ''
-    ExplicitWidth = 261
+    ExplicitWidth = 257
   end
   object CheckListBoxOptions: TCheckListBox
     Left = 16
     Top = 128
-    Width = 265
+    Width = 287
     Height = 256
     Anchors = [akLeft, akTop, akRight, akBottom]
     Font.Charset = DEFAULT_CHARSET
@@ -75,18 +75,18 @@ object FormMain: TFormMain
     Font.Height = -12
     Font.Name = 'Segoe UI'
     Font.Style = []
-    ItemHeight = 15
+    ItemHeight = 17
     Items.Strings = (
       'At Timer'
       '5 minutes before a Timer'
       '10 minutes before a Timer')
     ParentFont = False
     TabOrder = 2
-    ExplicitWidth = 261
+    ExplicitWidth = 257
     ExplicitHeight = 255
   end
   object ButtonStart: TButton
-    Left = 132
+    Left = 154
     Top = 399
     Width = 75
     Height = 25
@@ -94,11 +94,11 @@ object FormMain: TFormMain
     Caption = 'Start'
     TabOrder = 3
     OnClick = ButtonStartClick
-    ExplicitLeft = 128
+    ExplicitLeft = 124
     ExplicitTop = 398
   end
   object ButtonStop: TButton
-    Left = 206
+    Left = 228
     Top = 399
     Width = 75
     Height = 25
@@ -107,14 +107,15 @@ object FormMain: TFormMain
     Enabled = False
     TabOrder = 4
     OnClick = ButtonStopClick
-    ExplicitLeft = 202
+    ExplicitLeft = 198
     ExplicitTop = 398
   end
   object TrayIcon: TTrayIcon
+    Hint = 'TimerBoardHelper'
     PopupMenu = PopupMenuTray
     Visible = True
-    Left = 136
-    Top = 8
+    Left = 80
+    Top = 320
   end
   object WebSocket: TSslWebSocketCli
     LocalAddr = '0.0.0.0'
@@ -162,11 +163,11 @@ object FormMain: TFormMain
     OnWSDisconnected = WebSocketWSDisconnected
     OnWSFrameRcvd = WebSocketWSFrameRcvd
     Left = 200
-    Top = 8
+    Top = 208
   end
   object PopupMenuTray: TPopupMenu
-    Left = 56
-    Top = 8
+    Left = 80
+    Top = 208
     object MenuExit: TMenuItem
       Caption = 'Exit'
       OnClick = MenuExitClick
@@ -184,19 +185,19 @@ object FormMain: TFormMain
     Enabled = False
     Interval = 10000
     OnTimer = TimerReconnectTimer
-    Left = 176
-    Top = 96
+    Left = 200
+    Top = 264
   end
   object TimerReconnectForSleep: TTimer
     Enabled = False
     Interval = 5000
     OnTimer = TimerReconnectForSleepTimer
-    Left = 56
-    Top = 96
+    Left = 80
+    Top = 264
   end
   object NotificationCenter: TNotificationCenter
     OnReceiveLocalNotification = NotificationCenterReceiveLocalNotification
-    Left = 56
-    Top = 200
+    Left = 200
+    Top = 320
   end
 end
