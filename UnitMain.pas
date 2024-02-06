@@ -3,6 +3,7 @@
 interface
 
 uses
+  UnitNotification,
   DateUtils,
   MMSystem,
   System.JSON,
@@ -25,8 +26,14 @@ uses
   Vcl.StdCtrls,
   Vcl.Mask,
   Vcl.CheckLst,
-  Vcl.Menus,
-  System.Notification;
+  Vcl.Menus;
+
+const
+  CHECK_TIMER_0 = 0;
+  CHECK_TIMER_5 = 1;
+  CHECK_TIMER_10 = 2;
+  CHECK_SHOW_WELCOME = 3;
+  CHECK_SHOW_DISCONNECT = 4;
 
 type
   TFormMain = class(TForm)
@@ -44,7 +51,6 @@ type
     TimerReconnect: TTimer;
     MenuExit: TMenuItem;
     TimerReconnectForSleep: TTimer;
-    NotificationCenter: TNotificationCenter;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure LabelGetCodeClick(Sender: TObject);
@@ -59,17 +65,14 @@ type
     procedure MenuExitClick(Sender: TObject);
     procedure TimerReconnectForSleepTimer(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure NotificationCenterReceiveLocalNotification(Sender: TObject;
-      ANotification: TNotification);
   private
     { Private declarations }
-    lastUrl: String;
     autoReconnect: Boolean;
 
     function GetFile(): TIniFile;
     procedure log(s: String; firstMessage: Boolean = False);
     procedure Send(s: String);
-    procedure ShowNotification(Id, Title, Text: String);
+    procedure ShowNotification(Id, Title, Text: String; Url: String = '');
     procedure AlignItems();
     procedure AlignWidth(Item: TControl);
     procedure AlignRight(Item: TControl; addSpace: Integer = 0);
@@ -105,26 +108,30 @@ begin
   AlignRight(ButtonStart, ButtonStop.Width);
 end;
 
-procedure TFormMain.ShowNotification(Id, Title, Text: String);
+procedure TFormMain.ShowNotification(Id, Title, Text: String; Url: String = '');
+const
+  // <action content="Open Google" activationType="protocol" arguments="http://www.google.com" />
+  // <action content="Open path" activationType="protocol" arguments="file:///c:\" />
+  // <action activationType="system" arguments="dismiss" content=""/>
+
+  TEMPLATE = '<toast activationType="protocol" launch="__URL__">' +
+    '<visual><binding template="ToastGeneric">' +
+    '<text>__TITLE__</text><text>__TEXT__</text>' +
+    '<image placement="appLogoOverride" src="file:///__ICON__"/>' +
+    '</binding></visual>' + '<actions></actions>' + '</toast>';
+
+  APP_ID = 'TimerBoardHelper';
 var
-  MyNotification: TNotification;
+  xml: String;
 begin
-  if not NotificationCenter.Supported then
-  begin
-    Exit;
-  end;
+  xml := TEMPLATE;
+  xml := StringReplace(xml, '__URL__', LabeledEditSite.Text + Url,
+    [rfIgnoreCase]);
+  xml := StringReplace(xml, '__TITLE__', Title, [rfIgnoreCase]);
+  xml := StringReplace(xml, '__TEXT__', Text, [rfIgnoreCase]);
+  xml := StringReplace(xml, '__ICON__', ExtractFilePath(ParamStr(0)) + 'bell-48.png', [rfIgnoreCase]);
 
-  MyNotification := NotificationCenter.CreateNotification;
-  try
-    MyNotification.Name := Id;
-    MyNotification.Title := Title;
-    MyNotification.AlertBody := Text;
-    MyNotification.FireDate := IncSecond(Now, 60);
-
-    NotificationCenter.PresentNotification(MyNotification);
-  finally
-    MyNotification.Free;
-  end;
+  TNotification.Show(APP_ID, xml);
 end;
 
 procedure TFormMain.Send(s: String);
@@ -183,18 +190,6 @@ begin
   ShowWindow(Handle, SW_NORMAL);
 end;
 
-procedure TFormMain.NotificationCenterReceiveLocalNotification(Sender: TObject;
-  ANotification: TNotification);
-begin
-  log('NotificationCenterReceiveLocalNotification: ' + ANotification.Name +
-    ', url: ' + lastUrl);
-
-  if lastUrl <> '' then
-  begin
-    ShellExecute(0, 'open', PChar(lastUrl), nil, nil, SW_SHOWNORMAL);
-  end;
-end;
-
 procedure TFormMain.TimerReconnectForSleepTimer(Sender: TObject);
 begin
   log('TimerReconnectForSleepTimer: autoReconnect: ' + BoolToStr(autoReconnect,
@@ -238,7 +233,10 @@ begin
     ButtonStopClick(Sender);
   end;
 
-  ShowNotification('WebSocketWSDisconnected', 'Disconnected', Text);
+  if CheckListBoxOptions.Checked[CHECK_SHOW_DISCONNECT] then
+  begin
+    ShowNotification('WebSocketWSDisconnected', 'Disconnected', Text);
+  end;
 end;
 
 procedure TFormMain.WebSocketWSFrameRcvd(Sender: TSslWebSocketCli;
@@ -263,9 +261,10 @@ begin
 
     Send('code/' + LabeledEditCode.Text);
 
-    lastUrl := LabeledEditSite.Text + '/timer';
-
-    ShowNotification('message', APacket, '(Message received)');
+    if CheckListBoxOptions.Checked[CHECK_SHOW_WELCOME] then
+    begin
+      ShowNotification('message', APacket, '(Message received)');
+    end;
   end
 
   // ok
@@ -277,15 +276,15 @@ begin
   // options
   else if APacket = 'options' then
   begin
-    if CheckListBoxOptions.Checked[0] then
+    if CheckListBoxOptions.Checked[CHECK_TIMER_0] then
     begin
       Send('timer/0');
     end;
-    if CheckListBoxOptions.Checked[1] then
+    if CheckListBoxOptions.Checked[CHECK_TIMER_5] then
     begin
       Send('timer/5');
     end;
-    if CheckListBoxOptions.Checked[2] then
+    if CheckListBoxOptions.Checked[CHECK_TIMER_10] then
     begin
       Send('timer/10');
     end;
@@ -297,9 +296,7 @@ begin
     JSON := TJSONObject.ParseJSONValue(APacket, False, True) as TJSONObject;
 
     ShowNotification('json', JSON.FindValue('title').Value,
-      JSON.FindValue('text').Value);
-
-    lastUrl := LabeledEditSite.Text + JSON.FindValue('url').Value;
+      JSON.FindValue('text').Value, JSON.FindValue('url').Value);
 
     sound := JSON.FindValue('sound').Value;
     if sound <> '' then
@@ -313,8 +310,6 @@ begin
   // else
   else if APacket <> '' then
   begin
-    lastUrl := LabeledEditSite.Text + '/timer';
-
     ShowNotification('message', APacket, '(Message received)');
   end;
 end;
@@ -329,8 +324,8 @@ begin
   LabeledEditSite.Enabled := False;
   LabeledEditCode.Enabled := False;
 
-  WebSocket.URL := LabeledEditSite.Text + '/socket/';
-  WebSocket.URL := StringReplace(WebSocket.URL, 'http', 'ws', [rfIgnoreCase]);
+  WebSocket.Url := LabeledEditSite.Text + '/socket/';
+  WebSocket.Url := StringReplace(WebSocket.Url, 'http', 'ws', [rfIgnoreCase]);
 
   // WebSocket.Abort;
   WebSocket.WSConnect;
@@ -380,8 +375,6 @@ begin
   autoReconnect := False;
   WebSocket.Abort;
 
-  NotificationCenter.CancelAll;
-
   log('FormClose');
 end;
 
@@ -394,6 +387,8 @@ var
   index: Integer;
 begin
   log('FormCreate', True);
+
+  TNotification.Init('TimerBoardHelper');
 
   AlignItems();
 

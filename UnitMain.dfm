@@ -49,7 +49,7 @@ object FormMain: TFormMain
     EditLabel.Caption = 'Site'
     TabOrder = 0
     Text = ''
-    ExplicitWidth = 257
+    ExplicitWidth = 283
   end
   object LabeledEditCode: TLabeledEdit
     Left = 16
@@ -62,7 +62,7 @@ object FormMain: TFormMain
     EditLabel.Caption = 'Code'
     TabOrder = 1
     Text = ''
-    ExplicitWidth = 257
+    ExplicitWidth = 283
   end
   object CheckListBoxOptions: TCheckListBox
     Left = 16
@@ -75,14 +75,16 @@ object FormMain: TFormMain
     Font.Height = -12
     Font.Name = 'Segoe UI'
     Font.Style = []
-    ItemHeight = 17
+    ItemHeight = 15
     Items.Strings = (
       'At Timer'
       '5 minutes before a Timer'
-      '10 minutes before a Timer')
+      '10 minutes before a Timer'
+      'Show Welcome message'
+      'Show Disconnect message')
     ParentFont = False
     TabOrder = 2
-    ExplicitWidth = 257
+    ExplicitWidth = 283
     ExplicitHeight = 255
   end
   object ButtonStart: TButton
@@ -94,7 +96,7 @@ object FormMain: TFormMain
     Caption = 'Start'
     TabOrder = 3
     OnClick = ButtonStartClick
-    ExplicitLeft = 124
+    ExplicitLeft = 150
     ExplicitTop = 398
   end
   object ButtonStop: TButton
@@ -107,7 +109,7 @@ object FormMain: TFormMain
     Enabled = False
     TabOrder = 4
     OnClick = ButtonStopClick
-    ExplicitLeft = 198
+    ExplicitLeft = 224
     ExplicitTop = 398
   end
   object TrayIcon: TTrayIcon
@@ -194,10 +196,5 @@ object FormMain: TFormMain
     OnTimer = TimerReconnectForSleepTimer
     Left = 80
     Top = 264
-  end
-  object NotificationCenter: TNotificationCenter
-    OnReceiveLocalNotification = NotificationCenterReceiveLocalNotification
-    Left = 200
-    Top = 320
   end
 end

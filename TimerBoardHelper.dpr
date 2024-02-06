@@ -2,7 +2,8 @@
 
 uses
   Vcl.Forms,
-  UnitMain in 'UnitMain.pas' {FormMain};
+  UnitMain in 'UnitMain.pas' {FormMain},
+  UnitNotification in 'UnitNotification.pas';
 
 {$R *.res}
 
