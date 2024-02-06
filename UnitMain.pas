@@ -145,7 +145,7 @@ var
   fileName: String;
   logFile: TextFile;
 begin
-  fileName := ExtractFilePath(ParamStr(0)) + '\log.txt';
+  fileName := ExtractFilePath(ParamStr(0)) + 'log.txt';
 
   AssignFile(logFile, fileName);
 
@@ -169,7 +169,7 @@ end;
 
 function TFormMain.GetFile(): TIniFile;
 begin
-  Result := TIniFile.Create(ExtractFilePath(ParamStr(0)) + '\' + 'config.ini')
+  Result := TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'config.ini')
 end;
 
 procedure TFormMain.LabelGetCodeClick(Sender: TObject);
