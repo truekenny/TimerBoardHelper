@@ -15,25 +15,84 @@ uses
   System.Win.ComObj,
   Windows;
 
+const
+  NOTIFICATION_MAX_COUNT = 100;
+
 type
+  TSingleNotification = record
+    AppID: String;
+    Notification: IToastNotification;
+    ExpiredTime: TDateTime;
+  end;
+
   TNotification = class
   public
     procedure Init(const AppLinkName: string);
-    procedure Show(Const AppID: String; Const XML: String);
+    procedure Show(Const AppID: String; Const XML: String;
+      ExpiredTime: TDateTime);
+
+    procedure HideAll(ExpiredOnly: Boolean = False);
   protected
     function CreateDesktopShellLink(const AppLinkName: string): Boolean;
   private
+    AllNotifications: array [0 .. NOTIFICATION_MAX_COUNT - 1]
+      of TSingleNotification;
+
     function HStr(Value: String): HString;
+{$IFDEF CONSOLE}
     function ToastTemplateToString(Const Template
       : Xml_Dom_IXmlDocument): String;
+{$ENDIF}
     function GetFactory(Const Name: String; Const GUID: String): IInspectable;
     procedure OverwriteToastTemplateXML(Const Template: Xml_Dom_IXmlDocument;
       Const XML: String);
+
+    procedure Hide(SingleNotification: TSingleNotification);
+
+    procedure SaveNotification(const AppID: String;
+      const LToastNotification: IToastNotification; ExpiredTime: TDateTime);
   end;
 
 implementation
 
+procedure TNotification.SaveNotification(const AppID: String;
+  const LToastNotification: IToastNotification; ExpiredTime: TDateTime);
+var
+  Index: Integer;
+begin
+  for index := 0 to NOTIFICATION_MAX_COUNT - 1 do
+  begin
+    if AllNotifications[Index].Notification <> nil then
+      continue;
+
+    AllNotifications[Index].AppID := AppID;
+    AllNotifications[Index].Notification := LToastNotification;
+    AllNotifications[Index].ExpiredTime := ExpiredTime;
+
+    break;
+  end;
+end;
+
+procedure TNotification.HideAll(ExpiredOnly: Boolean = False);
+var
+  Index: Integer;
+begin
+  for Index := 0 to NOTIFICATION_MAX_COUNT - 1 do
+  begin
+    if AllNotifications[Index].Notification = nil then
+      continue;
+
+    if ExpiredOnly and (AllNotifications[Index].ExpiredTime > Now) then
+      continue;
+
+    Hide(AllNotifications[Index]);
+    AllNotifications[Index].Notification := nil;
+  end;
+end;
+
 procedure TNotification.Init(const AppLinkName: string);
+var
+  Index: Integer;
 begin
   if TOSVersion.Major < 10 then
     raise Exception.Create('Windows 10 Required');
@@ -42,6 +101,9 @@ begin
 
   if not CreateDesktopShellLink(AppLinkName) then
     raise Exception.Create('CreateDesktopShellLink failed');
+
+  for Index := 0 to NOTIFICATION_MAX_COUNT - 1 do
+    AllNotifications[index].Notification := nil;
 end;
 
 function TNotification.CreateDesktopShellLink(const AppLinkName
@@ -95,6 +157,8 @@ begin
     raise Exception.CreateFmt('Unable to create HString for %s', [Value]);
 end;
 
+{$IFDEF CONSOLE}
+
 function TNotification.ToastTemplateToString(Const Template
   : Xml_Dom_IXmlDocument): String;
 
@@ -110,6 +174,7 @@ begin
   Result := HStringToString
     ((Template.DocumentElement as Xml_Dom_IXmlNodeSerializer).GetXml);
 end;
+{$ENDIF}
 
 function TNotification.GetFactory(Const Name: String; Const GUID: String)
   : IInspectable;
@@ -142,17 +207,42 @@ begin
   end;
 end;
 
-procedure TNotification.Show(Const AppID: String; Const XML: String);
+procedure TNotification.Hide(SingleNotification: TSingleNotification);
 const
   SToastNotificationManager =
     'Windows.UI.Notifications.ToastNotificationManager';
   SToastNotification = 'Windows.UI.Notifications.ToastNotification';
 var
+  ToastNotificationManagerFactory: IInspectable;
+  ToastNotificationManagerStatics: IToastNotificationManagerStatics;
+  hAppID: HString;
+begin
+  ToastNotificationManagerFactory := GetFactory(SToastNotificationManager,
+    '{50AC103F-D235-4598-BBEF-98FE4D1A3AD4}');
+  ToastNotificationManagerStatics := IToastNotificationManagerStatics
+    (ToastNotificationManagerFactory);
+
+  hAppID := HStr(SingleNotification.AppID);
+  try
+    ToastNotificationManagerStatics.CreateToastNotifier(hAppID)
+      .Hide(SingleNotification.Notification);
+  finally
+    WindowsDeleteString(hAppID);
+  end;
+end;
+
+procedure TNotification.Show(Const AppID: String; Const XML: String;
+  ExpiredTime: TDateTime);
+const
+  SToastNotificationManager =
+    'Windows.UI.Notifications.ToastNotificationManager';
+  SToastNotification = 'Windows.UI.Notifications.ToastNotification';
+var
+  ToastNotificationManagerFactory: IInspectable;
   ToastNotificationManagerStatics: IToastNotificationManagerStatics;
   ToastTemplate: Xml_Dom_IXmlDocument;
-  LToastNotification: IToastNotification;
-  ToastNotificationManagerFactory: IInspectable;
   ToastNotificationFactory: IInspectable;
+  LToastNotification: IToastNotification;
   hAppID: HString;
 begin
   ToastNotificationManagerFactory := GetFactory(SToastNotificationManager,
@@ -177,6 +267,8 @@ begin
   try
     ToastNotificationManagerStatics.CreateToastNotifier(hAppID)
       .Show(LToastNotification);
+
+    SaveNotification(AppID, LToastNotification, ExpiredTime);
   finally
     WindowsDeleteString(hAppID);
   end;

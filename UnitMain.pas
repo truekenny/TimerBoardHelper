@@ -51,6 +51,7 @@ type
     TimerReconnect: TTimer;
     MenuExit: TMenuItem;
     TimerReconnectForSleep: TTimer;
+    TimerNotificationHide: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure LabelGetCodeClick(Sender: TObject);
@@ -65,6 +66,7 @@ type
     procedure MenuExitClick(Sender: TObject);
     procedure TimerReconnectForSleepTimer(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure TimerNotificationHideTimer(Sender: TObject);
   private
     { Private declarations }
     autoReconnect: Boolean;
@@ -73,7 +75,8 @@ type
     function GetFile(): TIniFile;
     procedure log(s: String; firstMessage: Boolean = False);
     procedure Send(s: String);
-    procedure ShowNotification(Id, Title, Text: String; Url: String = '');
+    procedure ShowNotification(const Title, Text: String;
+      const ExpiredTime: TDateTime; const Url: String = '');
     procedure AlignItems();
     procedure AlignWidth(Item: TControl);
     procedure AlignRight(Item: TControl; addSpace: Integer = 0);
@@ -109,7 +112,8 @@ begin
   AlignRight(ButtonStart, ButtonStop.Width);
 end;
 
-procedure TFormMain.ShowNotification(Id, Title, Text: String; Url: String = '');
+procedure TFormMain.ShowNotification(const Title, Text: String;
+  const ExpiredTime: TDateTime; const Url: String = '');
 const
   // <action content="Open Google" activationType="protocol" arguments="http://www.google.com" />
   // <action content="Open path" activationType="protocol" arguments="file:///c:\" />
@@ -130,9 +134,10 @@ begin
     [rfIgnoreCase]);
   xml := StringReplace(xml, '__TITLE__', Title, [rfIgnoreCase]);
   xml := StringReplace(xml, '__TEXT__', Text, [rfIgnoreCase]);
-  xml := StringReplace(xml, '__ICON__', ExtractFilePath(ParamStr(0)) + 'bell-48.png', [rfIgnoreCase]);
+  xml := StringReplace(xml, '__ICON__', ExtractFilePath(ParamStr(0)) +
+    'bell-48.png', [rfIgnoreCase]);
 
-  Notification.Show(APP_ID, xml);
+  Notification.Show(APP_ID, xml, ExpiredTime);
 end;
 
 procedure TFormMain.Send(s: String);
@@ -191,6 +196,12 @@ begin
   ShowWindow(Handle, SW_NORMAL);
 end;
 
+procedure TFormMain.TimerNotificationHideTimer(Sender: TObject);
+begin
+  if Notification <> nil then
+    Notification.HideAll(True);
+end;
+
 procedure TFormMain.TimerReconnectForSleepTimer(Sender: TObject);
 begin
   log('TimerReconnectForSleepTimer: autoReconnect: ' + BoolToStr(autoReconnect,
@@ -236,7 +247,7 @@ begin
 
   if CheckListBoxOptions.Checked[CHECK_SHOW_DISCONNECT] then
   begin
-    ShowNotification('WebSocketWSDisconnected', 'Disconnected', Text);
+    ShowNotification('Disconnected', Text, IncSecond(Now, 15));
   end;
 end;
 
@@ -264,7 +275,7 @@ begin
 
     if CheckListBoxOptions.Checked[CHECK_SHOW_WELCOME] then
     begin
-      ShowNotification('message', APacket, '(Message received)');
+      ShowNotification(APacket, '(Message received)', IncSecond(Now, 5));
     end;
   end
 
@@ -296,8 +307,8 @@ begin
   begin
     JSON := TJSONObject.ParseJSONValue(APacket, False, True) as TJSONObject;
 
-    ShowNotification('json', JSON.FindValue('title').Value,
-      JSON.FindValue('text').Value, JSON.FindValue('url').Value);
+    ShowNotification(JSON.FindValue('title').Value, JSON.FindValue('text')
+      .Value, IncSecond(Now, 60), JSON.FindValue('url').Value);
 
     sound := JSON.FindValue('sound').Value;
     if sound <> '' then
@@ -311,7 +322,7 @@ begin
   // else
   else if APacket <> '' then
   begin
-    ShowNotification('message', APacket, '(Message received)');
+    ShowNotification(APacket, '(Message received)', IncSecond(Now, 15));
   end;
 end;
 
@@ -377,6 +388,8 @@ begin
   WebSocket.Abort;
 
   log('FormClose');
+
+  Notification.HideAll();
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);

@@ -197,4 +197,9 @@ object FormMain: TFormMain
     Left = 80
     Top = 264
   end
+  object TimerNotificationHide: TTimer
+    OnTimer = TimerNotificationHideTimer
+    Left = 200
+    Top = 320
+  end
 end
