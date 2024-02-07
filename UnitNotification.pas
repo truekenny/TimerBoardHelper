@@ -18,24 +18,22 @@ uses
 type
   TNotification = class
   public
-    class procedure Init(const AppLinkName: string); static;
-    class procedure Show(Const AppID: String; Const XML: String); static;
+    procedure Init(const AppLinkName: string);
+    procedure Show(Const AppID: String; Const XML: String);
   protected
-    class function CreateDesktopShellLink(const AppLinkName: string)
-      : Boolean; static;
+    function CreateDesktopShellLink(const AppLinkName: string): Boolean;
   private
-    class function HStr(Value: String): HString; static;
-    class function ToastTemplateToString(Const Template: Xml_Dom_IXmlDocument)
-      : String; static;
-    class function GetFactory(Const Name: String; Const GUID: String)
-      : IInspectable; static;
-    class procedure OverwriteToastTemplateXML(Const Template
-      : Xml_Dom_IXmlDocument; Const XML: String); static;
+    function HStr(Value: String): HString;
+    function ToastTemplateToString(Const Template
+      : Xml_Dom_IXmlDocument): String;
+    function GetFactory(Const Name: String; Const GUID: String): IInspectable;
+    procedure OverwriteToastTemplateXML(Const Template: Xml_Dom_IXmlDocument;
+      Const XML: String);
   end;
 
 implementation
 
-class procedure TNotification.Init(const AppLinkName: string);
+procedure TNotification.Init(const AppLinkName: string);
 begin
   if TOSVersion.Major < 10 then
     raise Exception.Create('Windows 10 Required');
@@ -46,7 +44,7 @@ begin
     raise Exception.Create('CreateDesktopShellLink failed');
 end;
 
-class function TNotification.CreateDesktopShellLink(const AppLinkName
+function TNotification.CreateDesktopShellLink(const AppLinkName
   : string): Boolean;
 
   function GetStartMenuFolder(const AppLinkName: string): string;
@@ -90,14 +88,14 @@ begin
     Result := True;
 end;
 
-class function TNotification.HStr(Value: String): HString;
+function TNotification.HStr(Value: String): HString;
 begin
   if NOT Succeeded(WindowsCreateString(PWideChar(Value), Length(Value), Result))
   then
     raise Exception.CreateFmt('Unable to create HString for %s', [Value]);
 end;
 
-class function TNotification.ToastTemplateToString(Const Template
+function TNotification.ToastTemplateToString(Const Template
   : Xml_Dom_IXmlDocument): String;
 
   function HStringToString(Src: HString): String;
@@ -113,7 +111,7 @@ begin
     ((Template.DocumentElement as Xml_Dom_IXmlNodeSerializer).GetXml);
 end;
 
-class function TNotification.GetFactory(Const Name: String; Const GUID: String)
+function TNotification.GetFactory(Const Name: String; Const GUID: String)
   : IInspectable;
 var
   FactoryHString: HString;
@@ -131,7 +129,7 @@ begin
   end;
 end;
 
-class procedure TNotification.OverwriteToastTemplateXML(Const Template
+procedure TNotification.OverwriteToastTemplateXML(Const Template
   : Xml_Dom_IXmlDocument; Const XML: String);
 var
   hXML: HString;
@@ -144,7 +142,7 @@ begin
   end;
 end;
 
-class procedure TNotification.Show(Const AppID: String; Const XML: String);
+procedure TNotification.Show(Const AppID: String; Const XML: String);
 const
   SToastNotificationManager =
     'Windows.UI.Notifications.ToastNotificationManager';

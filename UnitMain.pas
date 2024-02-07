@@ -68,6 +68,7 @@ type
   private
     { Private declarations }
     autoReconnect: Boolean;
+    Notification: TNotification;
 
     function GetFile(): TIniFile;
     procedure log(s: String; firstMessage: Boolean = False);
@@ -131,7 +132,7 @@ begin
   xml := StringReplace(xml, '__TEXT__', Text, [rfIgnoreCase]);
   xml := StringReplace(xml, '__ICON__', ExtractFilePath(ParamStr(0)) + 'bell-48.png', [rfIgnoreCase]);
 
-  TNotification.Show(APP_ID, xml);
+  Notification.Show(APP_ID, xml);
 end;
 
 procedure TFormMain.Send(s: String);
@@ -388,7 +389,8 @@ var
 begin
   log('FormCreate', True);
 
-  TNotification.Init('TimerBoardHelper');
+  Notification := TNotification.Create;
+  Notification.Init('TimerBoardHelper');
 
   AlignItems();
 
