@@ -38,6 +38,22 @@ object FormMain: TFormMain
     OnClick = LabelGetCodeClick
     ExplicitLeft = 240
   end
+  object LabelLog: TLabel
+    Left = 16
+    Top = 403
+    Width = 25
+    Height = 15
+    Cursor = crHandPoint
+    Anchors = [akLeft, akBottom]
+    Caption = 'Logs'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clNavy
+    Font.Height = -12
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsUnderline]
+    ParentFont = False
+    OnClick = LabelLogClick
+  end
   object LabeledEditSite: TLabeledEdit
     Left = 16
     Top = 24

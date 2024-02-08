@@ -52,6 +52,7 @@ type
     MenuExit: TMenuItem;
     TimerReconnectForSleep: TTimer;
     TimerNotificationHide: TTimer;
+    LabelLog: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure LabelGetCodeClick(Sender: TObject);
@@ -67,6 +68,7 @@ type
     procedure TimerReconnectForSleepTimer(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure TimerNotificationHideTimer(Sender: TObject);
+    procedure LabelLogClick(Sender: TObject);
   private
     { Private declarations }
     autoReconnect: Boolean;
@@ -135,7 +137,7 @@ begin
   xml := StringReplace(xml, '__TITLE__', Title, [rfIgnoreCase]);
   xml := StringReplace(xml, '__TEXT__', Text, [rfIgnoreCase]);
   xml := StringReplace(xml, '__ICON__', ExtractFilePath(ParamStr(0)) +
-    'bell-48.png', [rfIgnoreCase]);
+    'appLogoOverride.png', [rfIgnoreCase]);
 
   Notification.Show(APP_ID, xml, ExpiredTime);
 end;
@@ -181,6 +183,12 @@ end;
 procedure TFormMain.LabelGetCodeClick(Sender: TObject);
 begin
   ShellExecute(0, 'open', PChar(LabeledEditSite.Text + '/notification-code'),
+    nil, nil, SW_SHOWNORMAL);
+end;
+
+procedure TFormMain.LabelLogClick(Sender: TObject);
+begin
+  ShellExecute(0, 'open', PChar(ExtractFilePath(ParamStr(0)) + 'log.txt'),
     nil, nil, SW_SHOWNORMAL);
 end;
 
