@@ -111,6 +111,9 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="UnitNotification.pas"/>
+        <DCCReference Include="Bird.Socket.Client.Consts.pas"/>
+        <DCCReference Include="Bird.Socket.Client.pas"/>
+        <DCCReference Include="Bird.Socket.Client.Types.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

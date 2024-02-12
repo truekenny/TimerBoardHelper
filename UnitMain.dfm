@@ -135,54 +135,6 @@ object FormMain: TFormMain
     Left = 80
     Top = 320
   end
-  object WebSocket: TSslWebSocketCli
-    LocalAddr = '0.0.0.0'
-    LocalAddr6 = '::'
-    ProxyPort = '80'
-    Agent = 'Mozilla/4.0'
-    Accept = 'image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*'
-    NoCache = False
-    ResponseNoException = False
-    ContentTypePost = 'application/x-www-form-urlencoded'
-    LmCompatLevel = 0
-    RequestVer = '1.1'
-    FollowRelocation = True
-    LocationChangeMaxCount = 5
-    ServerAuth = httpAuthNone
-    ProxyAuth = httpAuthNone
-    BandwidthLimit = 10000
-    BandwidthSampling = 1000
-    Options = [httpoEnableContentCoding, httpoGetContent]
-    Timeout = 30
-    SocksLevel = '5'
-    SocksAuthentication = socksNoAuthentication
-    SocketFamily = sfAny
-    SocketErrs = wsErrTech
-    RestParams.PContent = PContUrlencoded
-    RestParams.RfcStrict = False
-    RestParams = <>
-    DebugLevel = DebugSsl
-    MaxBodySize = 104857600
-    SslCliSecurity = sslCliSecTls12
-    SslSessCache = True
-    CertVerMethod = CertVerNone
-    SslRootFile = 'RootCaCertsBundle.pem'
-    SslRevocation = False
-    SslReportChain = False
-    SslAllowSelfSign = False
-    HttpMemStrategy = HttpStratMem
-    HttpDownReplace = False
-    ResumeMinSize = 65535
-    ProgIntSecs = 2
-    ShowProgress = False
-    HttpUploadStrat = HttpUploadNone
-    WSPingSecs = 10
-    OnWSConnected = WebSocketWSConnected
-    OnWSDisconnected = WebSocketWSDisconnected
-    OnWSFrameRcvd = WebSocketWSFrameRcvd
-    Left = 200
-    Top = 208
-  end
   object PopupMenuTray: TPopupMenu
     Left = 80
     Top = 208

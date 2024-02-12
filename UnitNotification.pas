@@ -97,7 +97,7 @@ begin
   if TOSVersion.Major < 10 then
     raise Exception.Create('Windows 10 Required');
 
-  RoInitialize(RO_INIT_MULTITHREADED);
+  // RoInitialize(RO_INIT_MULTITHREADED);
 
   if not CreateDesktopShellLink(AppLinkName) then
     raise Exception.Create('CreateDesktopShellLink failed');
@@ -186,9 +186,9 @@ begin
   try
     FactoryGUID := TGUID.Create(GUID);
 
-    if NOT Succeeded(RoGetActivationFactory(FactoryHString, FactoryGUID, Result))
-    then
-      raise Exception.CreateFmt('Error creating factory: %s %s', [Name, GUID]);
+    OleCheck(RoGetActivationFactory(FactoryHString, FactoryGUID, Result));
+    // if NOT Succeeded(RoGetActivationFactory(FactoryHString, FactoryGUID, Result)) then
+    //  raise Exception.CreateFmt('Error creating factory: %s %s', [Name, GUID]);
   finally
     WindowsDeleteString(FactoryHString);
   end;

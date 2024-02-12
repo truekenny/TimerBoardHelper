@@ -3,6 +3,7 @@
 interface
 
 uses
+  Bird.Socket.Client,
   UnitNotification,
   DateUtils,
   MMSystem,
@@ -19,10 +20,6 @@ uses
   Vcl.Forms,
   Vcl.Dialogs,
   Vcl.ExtCtrls,
-  OverbyteIcsWndControl,
-  OverbyteIcsHttpProt,
-  OverbyteIcsSslHttpRest,
-  OverbyteIcsWebSocketCli,
   Vcl.StdCtrls,
   Vcl.Mask,
   Vcl.CheckLst,
@@ -38,7 +35,6 @@ const
 type
   TFormMain = class(TForm)
     TrayIcon: TTrayIcon;
-    WebSocket: TSslWebSocketCli;
     LabeledEditSite: TLabeledEdit;
     LabeledEditCode: TLabeledEdit;
     LabelGetCode: TLabel;
@@ -58,10 +54,8 @@ type
     procedure LabelGetCodeClick(Sender: TObject);
     procedure ButtonStartClick(Sender: TObject);
     procedure ButtonStopClick(Sender: TObject);
-    procedure WebSocketWSFrameRcvd(Sender: TSslWebSocketCli;
-      const APacket: string; var AFrame: TWebSocketReceivedFrame);
-    procedure WebSocketWSDisconnected(Sender: TObject);
-    procedure WebSocketWSConnected(Sender: TObject);
+    procedure OnWSMessage(const APacket: string);
+    procedure OnWSDisconnected(Sender: TObject);
     procedure MenuRestoreClick(Sender: TObject);
     procedure TimerReconnectTimer(Sender: TObject);
     procedure MenuExitClick(Sender: TObject);
@@ -73,9 +67,11 @@ type
     { Private declarations }
     autoReconnect: Boolean;
     Notification: TNotification;
+    WebSocket: TBirdSocketClient;
+    notificationEnabled: Boolean;
 
     function GetFile(): TIniFile;
-    procedure log(s: String; firstMessage: Boolean = False);
+    procedure Log(s: String; firstMessage: Boolean = False);
     procedure Send(s: String);
     procedure ShowNotification(const Title, Text: String;
       const ExpiredTime: TDateTime; const Url: String = '');
@@ -131,6 +127,9 @@ const
 var
   xml: String;
 begin
+  if not notificationEnabled then
+    exit;
+
   xml := TEMPLATE;
   xml := StringReplace(xml, '__URL__', LabeledEditSite.Text + Url,
     [rfIgnoreCase]);
@@ -144,11 +143,11 @@ end;
 
 procedure TFormMain.Send(s: String);
 begin
-  log('send: ' + s);
-  WebSocket.WSSendText(nil, s);
+  Log('send: ' + s);
+  WebSocket.Send(s);
 end;
 
-procedure TFormMain.log(s: String; firstMessage: Boolean = False);
+procedure TFormMain.Log(s: String; firstMessage: Boolean = False);
 var
   fileName: String;
   logFile: TextFile;
@@ -194,7 +193,7 @@ end;
 
 procedure TFormMain.MenuExitClick(Sender: TObject);
 begin
-  log('MenuExitClick');
+  Log('MenuExitClick');
 
   Close();
 end;
@@ -212,7 +211,7 @@ end;
 
 procedure TFormMain.TimerReconnectForSleepTimer(Sender: TObject);
 begin
-  log('TimerReconnectForSleepTimer: autoReconnect: ' + BoolToStr(autoReconnect,
+  Log('TimerReconnectForSleepTimer: autoReconnect: ' + BoolToStr(autoReconnect,
     True), True);
 
   TimerReconnectForSleep.Enabled := False;
@@ -221,56 +220,47 @@ end;
 
 procedure TFormMain.TimerReconnectTimer(Sender: TObject);
 begin
-  log('TimerReconnectTimer: autoReconnect: ' + BoolToStr(autoReconnect, True));
+  Log('TimerReconnectTimer: autoReconnect: ' + BoolToStr(autoReconnect, True));
 
   TimerReconnect.Enabled := False;
 
-  WebSocket.Abort;
-  WebSocket.WSConnect;
+  if WebSocket.Connected then
+    WebSocket.Disconnect;
+
+  WebSocket.Connect;
 end;
 
-procedure TFormMain.WebSocketWSConnected(Sender: TObject);
-begin
-  log('WebSocketWSConnected: ' + WebSocket.ReasonPhrase);
-end;
-
-procedure TFormMain.WebSocketWSDisconnected(Sender: TObject);
+procedure TFormMain.OnWSDisconnected(Sender: TObject);
 var
   Text: String;
 begin
-  log('WebSocketWSDisconnected: Connected: ' + BoolToStr(WebSocket.Connected,
-    True) + ', ReasonPhrase: ' + WebSocket.ReasonPhrase + ', autoReconnect: ' +
-    BoolToStr(autoReconnect, True));
+  Log('OnWSDisconnected: Connected: ' + BoolToStr(WebSocket.Connected, True) +
+    ', autoReconnect: ' + BoolToStr(autoReconnect, True));
 
-  if not WebSocket.Connected then
+  if autoReconnect then
   begin
-    if autoReconnect then
-    begin
-      Text := '(Auto reconnecting...)';
-      autoReconnect := False;
-      TimerReconnectForSleep.Enabled := True;
-    end
-    else
-    begin
-      Text := '(Shutdown)';
-      ButtonStopClick(Sender);
-    end;
+    Text := '(Auto reconnecting...)';
+    autoReconnect := False;
+    TimerReconnectForSleep.Enabled := True;
+  end
+  else
+  begin
+    Text := '(Shutdown)';
+    ButtonStopClick(Sender);
+  end;
 
-    if CheckListBoxOptions.Checked[CHECK_SHOW_DISCONNECT] then
-    begin
-      ShowNotification('Disconnected', Text, IncSecond(Now, 15));
-    end;
+  if CheckListBoxOptions.Checked[CHECK_SHOW_DISCONNECT] then
+  begin
+    ShowNotification('Disconnected', Text, IncSecond(Now, 15));
   end;
 end;
 
-procedure TFormMain.WebSocketWSFrameRcvd(Sender: TSslWebSocketCli;
-  const APacket: string; var AFrame: TWebSocketReceivedFrame);
+procedure TFormMain.OnWSMessage(const APacket: string);
 var
   JSON: TJSONObject;
   sound: String;
 begin
-  log('WebSocketWSFrameRcvd: ReasonPhrase: "' + WebSocket.ReasonPhrase +
-    '" APacket: "' + APacket + '"');
+  Log('OnWSMessage: APacket: "' + APacket + '"');
 
   // ping
   if APacket = 'ping' then
@@ -339,6 +329,8 @@ begin
 end;
 
 procedure TFormMain.ButtonStartClick(Sender: TObject);
+var
+  Url: String;
 begin
   ShowWindow(Handle, SW_HIDE);
 
@@ -348,15 +340,43 @@ begin
   LabeledEditSite.Enabled := False;
   LabeledEditCode.Enabled := False;
 
-  WebSocket.Url := LabeledEditSite.Text + '/socket/';
-  WebSocket.Url := StringReplace(WebSocket.Url, 'http', 'ws', [rfIgnoreCase]);
+  Url := LabeledEditSite.Text + '/socket/';
+  Url := StringReplace(Url, 'http', 'ws', [rfIgnoreCase]);
 
-  // WebSocket.Abort;
-  WebSocket.WSConnect;
+  if WebSocket <> nil then
+  begin
+    WebSocket.Disconnect;
+    FreeAndNil(WebSocket);
+  end;
+
+  WebSocket := TBirdSocketClient.New(Url);
+  WebSocket.AddEventListener(TEventType.MESSAGE,
+    procedure(const AText: string)
+    begin
+      TThread.Synchronize(nil,
+        procedure()
+        begin
+          OnWSMessage(AText);
+        end);
+    end);
+
+  WebSocket.AddEventListener(TEventType.ERROR,
+    procedure(const AException: Exception; var AForceDisconnect: Boolean)
+    begin
+      TThread.Synchronize(nil,
+        procedure()
+        begin
+          Log('TEventType.ERROR ' + AException.MESSAGE);
+          OnWSDisconnected(Self);
+        end);
+    end);
+
+  WebSocket.Connect;
 end;
 
 procedure TFormMain.ButtonStopClick(Sender: TObject);
 begin
+  Log('ButtonStopClick');
   autoReconnect := False;
   TimerReconnect.Enabled := False;
   TimerReconnectForSleep.Enabled := False;
@@ -369,7 +389,7 @@ begin
   LabeledEditSite.Enabled := True;
   LabeledEditCode.Enabled := True;
 
-  WebSocket.Abort;
+  WebSocket.Disconnect;
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -377,6 +397,8 @@ var
   ini: TIniFile;
   index: Integer;
 begin
+  Log('FormClose +');
+
   ini := GetFile();
   try
     ini.WriteInteger('main', 'left', Left);
@@ -397,11 +419,16 @@ begin
   end;
 
   autoReconnect := False;
-  WebSocket.Abort;
+  notificationEnabled := False;
 
-  log('FormClose');
+  if WebSocket <> nil then
+  begin
+    WebSocket.Disconnect;
+  end;
 
   Notification.HideAll();
+
+  Log('FormClose -');
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
@@ -412,15 +439,16 @@ var
   ini: TIniFile;
   index: Integer;
 begin
-  log('FormCreate', True);
+  Log('FormCreate', True);
+
+  WebSocket := nil;
+  notificationEnabled := True;
 
   Notification := TNotification.Create;
   Notification.Init('TimerBoardHelper');
 
   AlignItems();
 
-  WebSocket.Timeout := 30;
-  WebSocket.WSPingSecs := 10;
   autoReconnect := False;
 
   ini := GetFile();
