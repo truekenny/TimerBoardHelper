@@ -188,8 +188,8 @@ end;
 
 procedure TFormMain.LabelLogClick(Sender: TObject);
 begin
-  ShellExecute(0, 'open', PChar(ExtractFilePath(ParamStr(0)) + 'log.txt'),
-    nil, nil, SW_SHOWNORMAL);
+  ShellExecute(0, 'open', PChar(ExtractFilePath(ParamStr(0)) + 'log.txt'), nil,
+    nil, SW_SHOWNORMAL);
 end;
 
 procedure TFormMain.MenuExitClick(Sender: TObject);
@@ -238,24 +238,28 @@ procedure TFormMain.WebSocketWSDisconnected(Sender: TObject);
 var
   Text: String;
 begin
-  log('WebSocketWSDisconnected: ' + WebSocket.ReasonPhrase + ' autoReconnect: '
-    + BoolToStr(autoReconnect, True));
+  log('WebSocketWSDisconnected: Connected: ' + BoolToStr(WebSocket.Connected,
+    True) + ', ReasonPhrase: ' + WebSocket.ReasonPhrase + ', autoReconnect: ' +
+    BoolToStr(autoReconnect, True));
 
-  if autoReconnect then
+  if not WebSocket.Connected then
   begin
-    Text := '(Auto reconnecting...)';
-    autoReconnect := False;
-    TimerReconnectForSleep.Enabled := True;
-  end
-  else
-  begin
-    Text := '(Shutdown)';
-    ButtonStopClick(Sender);
-  end;
+    if autoReconnect then
+    begin
+      Text := '(Auto reconnecting...)';
+      autoReconnect := False;
+      TimerReconnectForSleep.Enabled := True;
+    end
+    else
+    begin
+      Text := '(Shutdown)';
+      ButtonStopClick(Sender);
+    end;
 
-  if CheckListBoxOptions.Checked[CHECK_SHOW_DISCONNECT] then
-  begin
-    ShowNotification('Disconnected', Text, IncSecond(Now, 15));
+    if CheckListBoxOptions.Checked[CHECK_SHOW_DISCONNECT] then
+    begin
+      ShowNotification('Disconnected', Text, IncSecond(Now, 15));
+    end;
   end;
 end;
 
