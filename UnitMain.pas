@@ -416,7 +416,7 @@ begin
   AlignItems();
 
   WebSocket.Timeout := 30;
-  WebSocket.WSPingSecs := 30;
+  WebSocket.WSPingSecs := 10;
   autoReconnect := False;
 
   ini := GetFile();
