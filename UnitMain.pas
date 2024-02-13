@@ -49,6 +49,7 @@ type
     TimerReconnectForSleep: TTimer;
     TimerNotificationHide: TTimer;
     LabelLog: TLabel;
+    ButtonClose: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure LabelGetCodeClick(Sender: TObject);
@@ -56,6 +57,7 @@ type
     procedure ButtonStopClick(Sender: TObject);
     procedure OnWSMessage(const APacket: string);
     procedure OnWSDisconnected(Sender: TObject);
+    procedure OnWSClosed(Sender: TObject);
     procedure MenuRestoreClick(Sender: TObject);
     procedure TimerReconnectTimer(Sender: TObject);
     procedure MenuExitClick(Sender: TObject);
@@ -63,6 +65,8 @@ type
     procedure FormResize(Sender: TObject);
     procedure TimerNotificationHideTimer(Sender: TObject);
     procedure LabelLogClick(Sender: TObject);
+    procedure ButtonCloseClick(Sender: TObject);
+    procedure FormDblClick(Sender: TObject);
   private
     { Private declarations }
     autoReconnect: Boolean;
@@ -127,6 +131,8 @@ const
 var
   xml: String;
 begin
+  Log('ShowNotification: ' + Title + ' ' + Text);
+
   if not notificationEnabled then
     exit;
 
@@ -144,7 +150,8 @@ end;
 procedure TFormMain.Send(s: String);
 begin
   Log('Send: ' + s);
-  WebSocket.Send(s);
+  if (WebSocket <> nil) and WebSocket.Connected then
+    WebSocket.Send(s);
 end;
 
 procedure TFormMain.Log(s: String; firstMessage: Boolean = False);
@@ -266,6 +273,18 @@ begin
   end;
 end;
 
+procedure TFormMain.OnWSClosed(Sender: TObject);
+begin
+  TThread.Synchronize(nil,
+    procedure()
+    begin
+      Log('OnWSClosed');
+      ShowNotification('Closed', 'Server sent close command',
+        IncSecond(Now, 15));
+    end);
+  ButtonStopClick(Sender);
+end;
+
 procedure TFormMain.OnWSMessage(const APacket: string);
 var
   JSON: TJSONObject;
@@ -339,6 +358,12 @@ begin
   end;
 end;
 
+procedure TFormMain.ButtonCloseClick(Sender: TObject);
+begin
+  Log('ButtonCloseClick');
+  Send('close');
+end;
+
 procedure TFormMain.ButtonStartClick(Sender: TObject);
 var
   Url: String;
@@ -361,6 +386,9 @@ begin
   end;
 
   WebSocket := TBirdSocketClient.New(Url);
+
+  WebSocket.AddEventListener(TEventType.Close, OnWSClosed);
+
   WebSocket.AddEventListener(TEventType.MESSAGE,
     procedure(const AText: string)
     begin
@@ -493,6 +521,11 @@ begin
   finally
     ini.Free;
   end;
+end;
+
+procedure TFormMain.FormDblClick(Sender: TObject);
+begin
+  ButtonClose.Visible := not ButtonClose.Visible;
 end;
 
 procedure TFormMain.FormResize(Sender: TObject);

@@ -15,13 +15,14 @@ object FormMain: TFormMain
   Font.Style = []
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDblClick = FormDblClick
   OnResize = FormResize
   DesignSize = (
     327
     441)
   TextHeight = 15
   object LabelGetCode: TLabel
-    Left = 254
+    Left = 250
     Top = 101
     Width = 49
     Height = 15
@@ -57,7 +58,7 @@ object FormMain: TFormMain
   object LabeledEditSite: TLabeledEdit
     Left = 16
     Top = 24
-    Width = 287
+    Width = 283
     Height = 23
     Anchors = [akLeft, akTop, akRight]
     EditLabel.Width = 19
@@ -65,12 +66,12 @@ object FormMain: TFormMain
     EditLabel.Caption = 'Site'
     TabOrder = 0
     Text = ''
-    ExplicitWidth = 283
+    ExplicitWidth = 279
   end
   object LabeledEditCode: TLabeledEdit
     Left = 16
     Top = 72
-    Width = 287
+    Width = 283
     Height = 23
     Anchors = [akLeft, akTop, akRight]
     EditLabel.Width = 28
@@ -78,12 +79,12 @@ object FormMain: TFormMain
     EditLabel.Caption = 'Code'
     TabOrder = 1
     Text = ''
-    ExplicitWidth = 283
+    ExplicitWidth = 279
   end
   object CheckListBoxOptions: TCheckListBox
     Left = 16
     Top = 128
-    Width = 287
+    Width = 283
     Height = 256
     Anchors = [akLeft, akTop, akRight, akBottom]
     Font.Charset = DEFAULT_CHARSET
@@ -91,7 +92,7 @@ object FormMain: TFormMain
     Font.Height = -12
     Font.Name = 'Segoe UI'
     Font.Style = []
-    ItemHeight = 15
+    ItemHeight = 17
     Items.Strings = (
       'At Timer'
       '5 minutes before a Timer'
@@ -100,11 +101,11 @@ object FormMain: TFormMain
       'Show Disconnect message')
     ParentFont = False
     TabOrder = 2
-    ExplicitWidth = 283
+    ExplicitWidth = 279
     ExplicitHeight = 255
   end
   object ButtonStart: TButton
-    Left = 154
+    Left = 150
     Top = 399
     Width = 75
     Height = 25
@@ -112,11 +113,11 @@ object FormMain: TFormMain
     Caption = 'Start'
     TabOrder = 3
     OnClick = ButtonStartClick
-    ExplicitLeft = 150
+    ExplicitLeft = 146
     ExplicitTop = 398
   end
   object ButtonStop: TButton
-    Left = 228
+    Left = 224
     Top = 399
     Width = 75
     Height = 25
@@ -125,7 +126,19 @@ object FormMain: TFormMain
     Enabled = False
     TabOrder = 4
     OnClick = ButtonStopClick
-    ExplicitLeft = 224
+    ExplicitLeft = 220
+    ExplicitTop = 398
+  end
+  object ButtonClose: TButton
+    Left = 64
+    Top = 399
+    Width = 75
+    Height = 25
+    Anchors = [akLeft, akBottom]
+    Caption = 'Close'
+    TabOrder = 5
+    Visible = False
+    OnClick = ButtonCloseClick
     ExplicitTop = 398
   end
   object TrayIcon: TTrayIcon
