@@ -279,10 +279,10 @@ begin
     procedure()
     begin
       Log('OnWSClosed');
+      ButtonStopClick(Sender);
       ShowNotification('Closed', 'Server sent close command',
         IncSecond(Now, 15));
     end);
-  ButtonStopClick(Sender);
 end;
 
 procedure TFormMain.OnWSMessage(const APacket: string);
@@ -419,7 +419,8 @@ end;
 
 procedure TFormMain.ButtonStopClick(Sender: TObject);
 begin
-  Log('ButtonStopClick');
+  Log('ButtonStopClick: WebSocket.Connected: ' +
+    BoolToStr(WebSocket.Connected, True));
   autoReconnect := False;
   TimerReconnect.Enabled := False;
   TimerReconnectForSleep.Enabled := False;
