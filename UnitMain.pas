@@ -143,16 +143,27 @@ end;
 
 procedure TFormMain.Send(s: String);
 begin
-  Log('send: ' + s);
+  Log('Send: ' + s);
   WebSocket.Send(s);
 end;
 
 procedure TFormMain.Log(s: String; firstMessage: Boolean = False);
 var
   fileName: String;
+  FileDateTime: TDateTime;
   logFile: TextFile;
 begin
   fileName := ExtractFilePath(ParamStr(0)) + 'log.txt';
+
+  if FileExists(fileName) then
+  begin
+    FileAge(fileName, FileDateTime);
+    if FileDateTime.Day <> TDateTime.Now.Day then
+    begin
+      RenameFile(fileName, ExtractFilePath(ParamStr(0)) + 'log_' +
+        FileDateTime.Format('yyyy-mm-dd') + '.txt')
+    end;
+  end;
 
   AssignFile(logFile, fileName);
 
@@ -362,11 +373,15 @@ begin
 
   WebSocket.AddEventListener(TEventType.ERROR,
     procedure(const AException: Exception; var AForceDisconnect: Boolean)
+    var
+      ForceDisconnect: Boolean;
     begin
+      ForceDisconnect := AForceDisconnect;
       TThread.Synchronize(nil,
         procedure()
         begin
-          Log('TEventType.ERROR ' + AException.MESSAGE);
+          Log('TEventType.ERROR Code: ' + AException.MESSAGE +
+            '; ForceDisconnect: ' + BoolToStr(ForceDisconnect, True));
           OnWSDisconnected(Self);
         end);
     end);
@@ -389,7 +404,8 @@ begin
   LabeledEditSite.Enabled := True;
   LabeledEditCode.Enabled := True;
 
-  WebSocket.Disconnect;
+  if WebSocket.Connected then
+    WebSocket.Disconnect;
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -397,7 +413,7 @@ var
   ini: TIniFile;
   index: Integer;
 begin
-  Log('FormClose +');
+  Log('FormClose begin');
 
   ini := GetFile();
   try
@@ -428,7 +444,10 @@ begin
 
   Notification.HideAll();
 
-  Log('FormClose -');
+  Application.ProcessMessages;
+  Sleep(100);
+
+  Log('FormClose end');
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
