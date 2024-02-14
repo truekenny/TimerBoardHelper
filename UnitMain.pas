@@ -3,6 +3,7 @@
 interface
 
 uses
+  HTTPUtil,
   Bird.Socket.Client,
   UnitNotification,
   DateUtils,
@@ -138,12 +139,13 @@ begin
     exit;
 
   xml := TEMPLATE;
-  xml := StringReplace(xml, '__URL__', LabeledEditSite.Text + Url,
+  xml := StringReplace(xml, '__URL__', HTMLEscape(LabeledEditSite.Text + Url),
     [rfIgnoreCase]);
-  xml := StringReplace(xml, '__TITLE__', Title, [rfIgnoreCase]);
-  xml := StringReplace(xml, '__TEXT__', Text, [rfIgnoreCase]);
-  xml := StringReplace(xml, '__ICON__', ExtractFilePath(ParamStr(0)) +
-    'appLogoOverride.png', [rfIgnoreCase]);
+  xml := StringReplace(xml, '__TITLE__', HTMLEscape(Title), [rfIgnoreCase]);
+  xml := StringReplace(xml, '__TEXT__', HTMLEscape(Text), [rfIgnoreCase]);
+  xml := StringReplace(xml, '__ICON__',
+    HTMLEscape(ExtractFilePath(ParamStr(0)) + 'appLogoOverride.png'),
+    [rfIgnoreCase]);
 
   Notification.Show(APP_ID, xml, ExpiredTime);
 end;
