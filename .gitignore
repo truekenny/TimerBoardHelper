@@ -5,3 +5,4 @@ Win32/Debug/config.ini
 *.identcache
 *.txt
 *.local
+Win32/Release/
