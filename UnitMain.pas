@@ -50,13 +50,14 @@ type
     TimerNotificationHide: TTimer;
     LabelLog: TLabel;
     ButtonClose: TButton;
+    MenuSeparator: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure LabelGetCodeClick(Sender: TObject);
     procedure ButtonStartClick(Sender: TObject);
     procedure ButtonStopClick(Sender: TObject);
     procedure OnWSMessage(const APacket: string);
-    procedure OnWSDisconnected(Sender: TObject);
+    procedure OnWSDisconnected(Sender: TObject; const AException: Exception);
     procedure OnWSClosed(Sender: TObject);
     procedure MenuRestoreClick(Sender: TObject);
     procedure TimerReconnectTimer(Sender: TObject);
@@ -248,22 +249,26 @@ begin
   WebSocket.Connect;
 end;
 
-procedure TFormMain.OnWSDisconnected(Sender: TObject);
+procedure TFormMain.OnWSDisconnected(Sender: TObject;
+  const AException: Exception);
 var
   Text: String;
 begin
-  Log('OnWSDisconnected: Connected: ' + BoolToStr(WebSocket.Connected, True) +
-    ', autoReconnect: ' + BoolToStr(autoReconnect, True));
+  Log('OnWSDisconnected: Message: ' + AException.Message + ', Connected: ' +
+    BoolToStr(WebSocket.Connected, True) + ', autoReconnect: ' +
+    BoolToStr(autoReconnect, True));
+
+  Text := AException.Message;
 
   if autoReconnect then
   begin
-    Text := '(Auto reconnecting...)';
+    Text := Text + ' (Reconnecting...)';
     autoReconnect := False;
     TimerReconnectForSleep.Enabled := True;
   end
   else
   begin
-    Text := '(Shutdown)';
+    Text := Text + '(Shutdown)';
     ButtonStopClick(Sender);
   end;
 
@@ -389,7 +394,7 @@ begin
 
   WebSocket.AddEventListener(TEventType.Close, OnWSClosed);
 
-  WebSocket.AddEventListener(TEventType.MESSAGE,
+  WebSocket.AddEventListener(TEventType.Message,
     procedure(const AText: string)
     begin
       TThread.Synchronize(nil,
@@ -401,16 +406,11 @@ begin
 
   WebSocket.AddEventListener(TEventType.ERROR,
     procedure(const AException: Exception; var AForceDisconnect: Boolean)
-    var
-      ForceDisconnect: Boolean;
     begin
-      ForceDisconnect := AForceDisconnect;
       TThread.Synchronize(nil,
         procedure()
         begin
-          Log('TEventType.ERROR Code: ' + AException.MESSAGE +
-            '; ForceDisconnect: ' + BoolToStr(ForceDisconnect, True));
-          OnWSDisconnected(Self);
+          OnWSDisconnected(Self, AException);
         end);
     end);
 
