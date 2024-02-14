@@ -268,7 +268,7 @@ begin
   end
   else
   begin
-    Text := Text + '(Shutdown)';
+    Text := Text + ' (Shutdown)';
     ButtonStopClick(Sender);
   end;
 
