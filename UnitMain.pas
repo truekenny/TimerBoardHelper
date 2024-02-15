@@ -3,7 +3,6 @@
 interface
 
 uses
-  HTTPUtil,
   Bird.Socket.Client,
   UnitNotification,
   DateUtils,
@@ -84,6 +83,7 @@ type
     procedure AlignItems();
     procedure AlignWidth(Item: TControl);
     procedure AlignRight(Item: TControl; addSpace: Integer = 0);
+    function HTMLEscape(const Str: string): string;
   public
     { Public declarations }
   end;
@@ -94,6 +94,31 @@ var
 implementation
 
 {$R *.dfm}
+
+function TFormMain.HTMLEscape(const Str: string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := Low(Str) to High(Str) do
+  begin
+    case Str[i]  of
+    '<' : Result := Result + '&lt;';    { Do not localize }
+    '>' : Result := Result + '&gt;';    { Do not localize }
+    '&' : Result := Result + '&amp;';   { Do not localize }
+    '"' : Result := Result + '&quot;';  { Do not localize }
+{$IFNDEF UNICODE}
+    #92, Char(160) .. #255 : Result := Result + '&#' + IntToStr(Ord(Str[ i ])) +';';  { Do not localize }
+{$ELSE}
+    // NOTE: Not very efficient
+    #$0080..#$FFFF : Result := Result + '&#' + IntToStr(Ord(Str[ i ])) +';'; { Do not localize }
+{$ENDIF}
+    else
+      Result := Result + Str[i];
+    end;
+  end;
+end;
+
 
 procedure TFormMain.AlignWidth(Item: TControl);
 begin
