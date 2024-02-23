@@ -31,6 +31,7 @@ const
   CHECK_TIMER_10 = 2;
   CHECK_SHOW_WELCOME = 3;
   CHECK_SHOW_DISCONNECT = 4;
+  CHECK_SHOW_TWITCH_DROPS = 5;
 
 type
   TFormMain = class(TForm)
@@ -51,6 +52,7 @@ type
     LabelLog: TLabel;
     ButtonClose: TButton;
     MenuSeparator: TMenuItem;
+    TimerTwitchDrop: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure LabelGetCodeClick(Sender: TObject);
@@ -68,6 +70,7 @@ type
     procedure LabelLogClick(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
     procedure FormDblClick(Sender: TObject);
+    procedure TimerTwitchDropTimer(Sender: TObject);
   private
     { Private declarations }
     autoReconnect: Boolean;
@@ -79,7 +82,8 @@ type
     procedure Log(s: String; firstMessage: Boolean = False);
     procedure Send(s: String);
     procedure ShowNotification(const Title, Text: String;
-      const ExpiredTime: TDateTime; const Url: String = '');
+      const ExpiredTime: TDateTime; const Url: String = '';
+      const ButtonText: String = ''; const ButtonUrl: String = '');
     procedure AlignItems();
     procedure AlignWidth(Item: TControl);
     procedure AlignRight(Item: TControl; addSpace: Integer = 0);
@@ -102,23 +106,30 @@ begin
   Result := '';
   for i := Low(Str) to High(Str) do
   begin
-    case Str[i]  of
-    '<' : Result := Result + '&lt;';    { Do not localize }
-    '>' : Result := Result + '&gt;';    { Do not localize }
-    '&' : Result := Result + '&amp;';   { Do not localize }
-    '"' : Result := Result + '&quot;';  { Do not localize }
+    case Str[i] of
+      '<':
+        Result := Result + '&lt;'; { Do not localize }
+      '>':
+        Result := Result + '&gt;'; { Do not localize }
+      '&':
+        Result := Result + '&amp;'; { Do not localize }
+      '"':
+        Result := Result + '&quot;'; { Do not localize }
 {$IFNDEF UNICODE}
-    #92, Char(160) .. #255 : Result := Result + '&#' + IntToStr(Ord(Str[ i ])) +';';  { Do not localize }
+      #92, Char(160) .. #255:
+        Result := Result + '&#' + IntToStr(Ord(Str[i])) + ';';
+      { Do not localize }
 {$ELSE}
-    // NOTE: Not very efficient
-    #$0080..#$FFFF : Result := Result + '&#' + IntToStr(Ord(Str[ i ])) +';'; { Do not localize }
+      // NOTE: Not very efficient
+      #$0080 .. #$FFFF:
+        Result := Result + '&#' + IntToStr(Ord(Str[i])) + ';';
+      { Do not localize }
 {$ENDIF}
     else
       Result := Result + Str[i];
     end;
   end;
 end;
-
 
 procedure TFormMain.AlignWidth(Item: TControl);
 begin
@@ -142,7 +153,8 @@ begin
 end;
 
 procedure TFormMain.ShowNotification(const Title, Text: String;
-  const ExpiredTime: TDateTime; const Url: String = '');
+  const ExpiredTime: TDateTime; const Url: String = '';
+  const ButtonText: String = ''; const ButtonUrl: String = '');
 const
   // <action content="Open Google" activationType="protocol" arguments="http://www.google.com" />
   // <action content="Open path" activationType="protocol" arguments="file:///c:\" />
@@ -152,11 +164,14 @@ const
     '<visual><binding template="ToastGeneric">' +
     '<text>__TITLE__</text><text>__TEXT__</text>' +
     '<image placement="appLogoOverride" src="file:///__ICON__"/>' +
-    '</binding></visual>' + '<actions></actions>' + '</toast>';
+    '</binding></visual>' + '<actions>__ACTIONS__</actions>' + '</toast>';
+
+  TEMPLATE_BUTTON =
+    '<action content="__TEXT__" activationType="protocol" arguments="__URL__" />';
 
   APP_ID = 'TimerBoardHelper';
 var
-  xml: String;
+  xml, actions: String;
 begin
   Log('ShowNotification: ' + Title + ' ' + Text);
 
@@ -171,6 +186,20 @@ begin
   xml := StringReplace(xml, '__ICON__',
     HTMLEscape(ExtractFilePath(ParamStr(0)) + 'appLogoOverride.png'),
     [rfIgnoreCase]);
+
+  if (ButtonText <> '') and (ButtonUrl <> '') then
+  begin
+    actions := TEMPLATE_BUTTON;
+    actions := StringReplace(actions, '__TEXT__', HTMLEscape(ButtonText),
+      [rfIgnoreCase]);
+    actions := StringReplace(actions, '__URL__',
+      HTMLEscape(LabeledEditSite.Text + ButtonUrl), [rfIgnoreCase]);
+    xml := StringReplace(xml, '__ACTIONS__', actions, [rfIgnoreCase]);
+  end
+  else
+  begin
+    xml := StringReplace(xml, '__ACTIONS__', '', [rfIgnoreCase]);
+  end;
 
   Notification.Show(APP_ID, xml, ExpiredTime);
 end;
@@ -276,6 +305,14 @@ begin
   WebSocket.Connect;
 end;
 
+procedure TFormMain.TimerTwitchDropTimer(Sender: TObject);
+begin
+  if CheckListBoxOptions.Checked[CHECK_SHOW_TWITCH_DROPS] then
+  begin
+    Send('twitch');
+  end;
+end;
+
 procedure TFormMain.OnWSDisconnected(Sender: TObject;
   const AException: Exception);
 var
@@ -372,7 +409,8 @@ begin
     JSON := TJSONObject.ParseJSONValue(APacket, False, True) as TJSONObject;
 
     ShowNotification(JSON.FindValue('title').Value, JSON.FindValue('text')
-      .Value, IncSecond(Now, 60), JSON.FindValue('url').Value);
+      .Value, IncSecond(Now, 60), JSON.FindValue('url').Value,
+      JSON.FindValue('buttonText').Value, JSON.FindValue('buttonUrl').Value);
 
     sound := JSON.FindValue('sound').Value;
     if sound <> '' then
@@ -483,7 +521,7 @@ begin
 
     for index := 0 to CheckListBoxOptions.Count - 1 do
     begin
-      ini.WriteBool('notification', 'checked.' + inttostr(index),
+      ini.WriteBool('notification', 'checked.' + IntToStr(index),
         CheckListBoxOptions.Checked[index]);
     end;
   finally
@@ -543,7 +581,7 @@ begin
     for index := 0 to CheckListBoxOptions.Count - 1 do
     begin
       CheckListBoxOptions.Checked[index] := ini.ReadBool('notification',
-        'checked.' + inttostr(index), True);
+        'checked.' + IntToStr(index), True);
     end;
 
   finally

@@ -93,13 +93,14 @@ object FormMain: TFormMain
     Font.Height = -12
     Font.Name = 'Segoe UI'
     Font.Style = []
-    ItemHeight = 15
+    ItemHeight = 17
     Items.Strings = (
       'At Timer'
       '5 minutes before a Timer'
       '10 minutes before a Timer'
       'Show Welcome message'
-      'Show Disconnect message')
+      'Show Disconnect message'
+      'Show Twitch Drops')
     ParentFont = False
     TabOrder = 2
     ExplicitWidth = 275
@@ -186,5 +187,11 @@ object FormMain: TFormMain
     OnTimer = TimerNotificationHideTimer
     Left = 200
     Top = 320
+  end
+  object TimerTwitchDrop: TTimer
+    Interval = 3600000
+    OnTimer = TimerTwitchDropTimer
+    Left = 200
+    Top = 208
   end
 end
