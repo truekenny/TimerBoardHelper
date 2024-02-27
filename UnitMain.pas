@@ -33,6 +33,9 @@ const
   CHECK_SHOW_DISCONNECT = 4;
   CHECK_SHOW_TWITCH_DROPS = 5;
 
+  TIMER_TWITCH_DROP_INTERVAL_INIT = 6 * 1000;
+  TIMER_TWITCH_DROP_INTERVAL_STANDARD = 60 * 60 * 1000;
+
 type
   TFormMain = class(TForm)
     TrayIcon: TTrayIcon;
@@ -71,6 +74,7 @@ type
     procedure ButtonCloseClick(Sender: TObject);
     procedure FormDblClick(Sender: TObject);
     procedure TimerTwitchDropTimer(Sender: TObject);
+    procedure TrayIconClick(Sender: TObject);
   private
     { Private declarations }
     autoReconnect: Boolean;
@@ -80,7 +84,7 @@ type
 
     function GetFile(): TIniFile;
     procedure Log(s: String; firstMessage: Boolean = False);
-    procedure Send(s: String);
+    function Send(s: String): Boolean;
     procedure ShowNotification(const Title, Text: String;
       const ExpiredTime: TDateTime; const Url: String = '';
       const ButtonText: String = ''; const ButtonUrl: String = '');
@@ -204,11 +208,17 @@ begin
   Notification.Show(APP_ID, xml, ExpiredTime);
 end;
 
-procedure TFormMain.Send(s: String);
+function TFormMain.Send(s: String): Boolean;
 begin
+  Result := False;
+
   Log('Send: ' + s);
   if (WebSocket <> nil) and WebSocket.Connected then
+  begin
     WebSocket.Send(s);
+
+    Result := True;
+  end;
 end;
 
 procedure TFormMain.Log(s: String; firstMessage: Boolean = False);
@@ -276,6 +286,7 @@ end;
 procedure TFormMain.MenuRestoreClick(Sender: TObject);
 begin
   ShowWindow(Handle, SW_NORMAL);
+  SetForegroundWindow(Handle);
 end;
 
 procedure TFormMain.TimerNotificationHideTimer(Sender: TObject);
@@ -307,10 +318,22 @@ end;
 
 procedure TFormMain.TimerTwitchDropTimer(Sender: TObject);
 begin
-  if CheckListBoxOptions.Checked[CHECK_SHOW_TWITCH_DROPS] then
+  if CheckListBoxOptions.Checked[CHECK_SHOW_TWITCH_DROPS] and Send('twitch')
+  then
   begin
-    Send('twitch');
+    TimerTwitchDrop.Interval := TIMER_TWITCH_DROP_INTERVAL_STANDARD;
+  end
+  else
+  begin
+    TimerTwitchDrop.Interval := TIMER_TWITCH_DROP_INTERVAL_INIT;
   end;
+  Log('TimerTwitchDrop.Interval := ' + IntToStr(TimerTwitchDrop.Interval));
+end;
+
+procedure TFormMain.TrayIconClick(Sender: TObject);
+begin
+  ShowWindow(Handle, SW_NORMAL);
+  SetForegroundWindow(Handle);
 end;
 
 procedure TFormMain.OnWSDisconnected(Sender: TObject;
@@ -553,6 +576,9 @@ var
   index: Integer;
 begin
   Log('FormCreate', True);
+
+  TimerTwitchDrop.Interval := TIMER_TWITCH_DROP_INTERVAL_INIT;
+  TimerTwitchDrop.Enabled := True;
 
   WebSocket := nil;
   notificationEnabled := True;

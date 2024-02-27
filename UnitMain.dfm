@@ -147,6 +147,7 @@ object FormMain: TFormMain
     Hint = 'TimerBoardHelper'
     PopupMenu = PopupMenuTray
     Visible = True
+    OnClick = TrayIconClick
     Left = 80
     Top = 320
   end
@@ -157,12 +158,12 @@ object FormMain: TFormMain
       Caption = 'Exit'
       OnClick = MenuExitClick
     end
-    object MenuSeparator: TMenuItem
-      Caption = '-'
-    end
     object MenuRestore: TMenuItem
       Caption = 'Restore'
       OnClick = MenuRestoreClick
+    end
+    object MenuSeparator: TMenuItem
+      Caption = '-'
     end
     object MenuTimerBoardHelper: TMenuItem
       Caption = 'TimerBoardHelper'
@@ -189,7 +190,7 @@ object FormMain: TFormMain
     Top = 320
   end
   object TimerTwitchDrop: TTimer
-    Interval = 3600000
+    Enabled = False
     OnTimer = TimerTwitchDropTimer
     Left = 200
     Top = 208
